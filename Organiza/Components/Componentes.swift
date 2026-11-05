@@ -22,6 +22,20 @@ struct Chip: View {
     }
 }
 
+/// Monograma "HB" no mesmo estilo do ícone do app.
+struct LogoHB: View {
+    var tamanho: CGFloat = 52
+
+    var body: some View {
+        Text("HB")
+            .font(.system(size: tamanho * 0.42, weight: .bold, design: .default))
+            .foregroundStyle(.white)
+            .frame(width: tamanho, height: tamanho)
+            .background(Theme.gradiente, in: RoundedRectangle(cornerRadius: tamanho * 0.28, style: .continuous))
+            .shadow(color: Theme.lilas.opacity(0.35), radius: 8, y: 4)
+    }
+}
+
 struct AnelProgresso: View {
     let progresso: Double
     var cor: Color = Theme.lilas

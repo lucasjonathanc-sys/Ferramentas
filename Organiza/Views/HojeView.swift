@@ -133,12 +133,17 @@ struct HojeView: View {
     }
 
     private var cabecalho: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(Fmt.dataPorExtenso(Date()))
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.secondary)
-            Text(saudacao)
-                .font(.system(.largeTitle, design: .rounded, weight: .bold))
+        HStack(alignment: .center, spacing: 14) {
+            LogoHB(tamanho: 52)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Fmt.dataPorExtenso(Date()))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text(saudacao)
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(2)
+            }
         }
     }
 
