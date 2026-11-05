@@ -1,95 +1,392 @@
+import Observation
 import SwiftData
 import SwiftUI
 
-struct Chip: View {
-    let texto: String
-    var icone: String? = nil
-    var cor: Color
+// MARK: - Estado global de navegação
 
-    var body: some View {
-        HStack(spacing: 4) {
-            if let icone {
-                Image(systemName: icone)
-            }
-            Text(texto)
-                .lineLimit(1)
-        }
-        .font(.caption2.weight(.semibold))
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .foregroundStyle(cor)
-        .background(cor.opacity(0.14), in: Capsule())
+/// Pedido para abrir o formulário "Nova atividade" já preenchido.
+struct NovaAtividadePedido: Identifiable {
+    let id = UUID()
+    var tipo: TipoAtividade = .tarefa
+    var data: Date? = nil
+    var temHorario = false
+    var cliente: Cliente? = nil
+}
+
+@Observable
+final class AppEstado {
+    var novaAtividade: NovaAtividadePedido?
+    var editando: Atividade?
+    var mostrarAjustes = false
+    var mostrarLembretes = false
+
+    func nova(_ pedido: NovaAtividadePedido = NovaAtividadePedido()) {
+        novaAtividade = pedido
     }
 }
 
-/// Monograma "HB" no mesmo estilo do ícone do app.
+enum Aba: Hashable {
+    case hoje, tarefas, agenda, clientes
+}
+
+// MARK: - Barra inferior com botão + central
+
+struct BarraAbas: View {
+    @Binding var aba: Aba
+    var onNova: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 0) {
+            item(.hoje, "house", "Hoje")
+            item(.tarefas, "checklist", "Tarefas")
+            Button(action: onNova) {
+                Image(systemName: "plus")
+                    .font(.title2.weight(.medium))
+                    .foregroundStyle(Theme.textoNoAcento)
+                    .frame(width: 56, height: 56)
+                    .background(Theme.acento, in: Circle())
+                    .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .offset(y: -8)
+            .accessibilityLabel("Nova atividade")
+            item(.agenda, "calendar", "Agenda")
+            item(.clientes, "person.2", "Clientes")
+        }
+        .padding(.horizontal, 8)
+        .padding(.top, 6)
+        .padding(.bottom, 2)
+        .background {
+            Theme.card
+                .overlay(alignment: .top) { Theme.borda.frame(height: 0.5) }
+                .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    private func item(_ destino: Aba, _ icone: String, _ titulo: String) -> some View {
+        let ativo = aba == destino
+        return Button {
+            aba = destino
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: icone)
+                    .font(.system(size: 18, weight: ativo ? .semibold : .regular))
+                    .frame(width: 48, height: 30)
+                    .background(ativo ? Theme.marcaSuave : Color.clear, in: Capsule())
+                Text(titulo)
+                    .font(.caption2)
+            }
+            .foregroundStyle(ativo ? Color.primary : Color.secondary)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Cabeçalho das páginas
+
+struct CabecalhoPagina<Extra: View>: View {
+    let titulo: String
+    var subtitulo: String?
+    var busca: Binding<String>?
+    var placeholderBusca: String
+    let extra: Extra
+
+    @Environment(AppEstado.self) private var app
+
+    init(
+        _ titulo: String,
+        subtitulo: String? = nil,
+        busca: Binding<String>? = nil,
+        placeholderBusca: String = "Buscar",
+        @ViewBuilder extra: () -> Extra
+    ) {
+        self.titulo = titulo
+        self.subtitulo = subtitulo
+        self.busca = busca
+        self.placeholderBusca = placeholderBusca
+        self.extra = extra()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(titulo)
+                    .font(Theme.tituloSerifado())
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
+                if let subtitulo {
+                    Text(subtitulo)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            HStack(spacing: 10) {
+                if let busca {
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                        TextField(placeholderBusca, text: busca)
+                            .autocorrectionDisabled()
+                        if !busca.wrappedValue.isEmpty {
+                            Button {
+                                busca.wrappedValue = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Theme.campo, in: Capsule())
+                    .overlay(Capsule().stroke(Theme.borda, lineWidth: 1))
+                } else {
+                    Spacer()
+                }
+                extra
+                BotaoCircular(icone: "bell") { app.mostrarLembretes = true }
+                AvatarUsuaria { app.mostrarAjustes = true }
+            }
+        }
+    }
+}
+
+extension CabecalhoPagina where Extra == EmptyView {
+    init(_ titulo: String, subtitulo: String? = nil, busca: Binding<String>? = nil, placeholderBusca: String = "Buscar") {
+        self.init(titulo, subtitulo: subtitulo, busca: busca, placeholderBusca: placeholderBusca) { EmptyView() }
+    }
+}
+
+struct BotaoCircular: View {
+    let icone: String
+    var acao: () -> Void
+
+    var body: some View {
+        Button(action: acao) {
+            Image(systemName: icone)
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(Color.primary)
+                .frame(width: 40, height: 40)
+                .background(Theme.campo, in: Circle())
+                .overlay(Circle().stroke(Theme.borda, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct AvatarUsuaria: View {
+    @AppStorage("nomeUsuaria") private var nome = "Hanna"
+    var acao: () -> Void
+
+    var body: some View {
+        Button(action: acao) {
+            Text(String(nome.first ?? "H").uppercased())
+                .font(.system(size: 18, weight: .regular, design: .serif))
+                .foregroundStyle(Theme.marca)
+                .frame(width: 40, height: 40)
+                .background(Theme.marcaSuave, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Ajustes")
+    }
+}
+
+/// Monograma "HB" no estilo do ícone do app.
 struct LogoHB: View {
     var tamanho: CGFloat = 52
 
     var body: some View {
         Text("HB")
-            .font(.system(size: tamanho * 0.42, weight: .bold, design: .default))
-            .foregroundStyle(.white)
+            .font(.system(size: tamanho * 0.42, weight: .bold))
+            .foregroundStyle(Theme.textoNoAcento)
             .frame(width: tamanho, height: tamanho)
-            .background(Theme.gradiente, in: RoundedRectangle(cornerRadius: tamanho * 0.28, style: .continuous))
-            .shadow(color: Theme.lilas.opacity(0.35), radius: 8, y: 4)
+            .background(Theme.acento, in: RoundedRectangle(cornerRadius: tamanho * 0.28, style: .continuous))
     }
 }
 
-struct AnelProgresso: View {
-    let progresso: Double
-    var cor: Color = Theme.lilas
-    var espessura: CGFloat = 10
+// MARK: - Chips
+
+/// Chip de filtro (preto quando selecionado, como "Abertas" no vídeo).
+struct FiltroChip: View {
+    let titulo: String
+    let ativo: Bool
+    var acao: () -> Void
 
     var body: some View {
-        ZStack {
-            Circle()
-                .stroke(cor.opacity(0.18), lineWidth: espessura)
-            Circle()
-                .trim(from: 0, to: max(0.001, min(progresso, 1)))
-                .stroke(cor, style: StrokeStyle(lineWidth: espessura, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .animation(.snappy, value: progresso)
+        Button(action: acao) {
+            Text(titulo)
+                .font(.subheadline.weight(ativo ? .semibold : .regular))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .foregroundStyle(ativo ? Theme.textoNoAcento : Color.primary)
+                .background(ativo ? Theme.acento : Theme.campo, in: Capsule())
+                .overlay(Capsule().stroke(ativo ? Color.clear : Theme.borda, lineWidth: 1))
         }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Chip de contexto com bolinha colorida.
+struct ContextoChip: View {
+    let contexto: Contexto
+    let ativo: Bool
+    var acao: () -> Void
+
+    var body: some View {
+        Button(action: acao) {
+            HStack(spacing: 6) {
+                Circle().fill(contexto.cor).frame(width: 7, height: 7)
+                Text(contexto.rawValue)
+                    .font(.subheadline)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .foregroundStyle(ativo ? contexto.cor : Color.primary)
+            .background(ativo ? contexto.cor.opacity(0.14) : Theme.campo, in: Capsule())
+            .overlay(Capsule().stroke(ativo ? contexto.cor : Theme.borda, lineWidth: ativo ? 1.5 : 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Layout simples que quebra linha (para os chips de contexto).
+struct FluxoLayout: Layout {
+    var espacamento: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let largura = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, alturaLinha: CGFloat = 0, maiorX: CGFloat = 0
+        for v in subviews {
+            let t = v.sizeThatFits(.unspecified)
+            if x > 0 && x + t.width > largura {
+                x = 0
+                y += alturaLinha + espacamento
+                alturaLinha = 0
+            }
+            x += t.width + espacamento
+            maiorX = max(maiorX, x - espacamento)
+            alturaLinha = max(alturaLinha, t.height)
+        }
+        return CGSize(width: min(maiorX, largura), height: y + alturaLinha)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, alturaLinha: CGFloat = 0
+        for v in subviews {
+            let t = v.sizeThatFits(.unspecified)
+            if x > bounds.minX && x + t.width > bounds.maxX {
+                x = bounds.minX
+                y += alturaLinha + espacamento
+                alturaLinha = 0
+            }
+            v.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(t))
+            x += t.width + espacamento
+            alturaLinha = max(alturaLinha, t.height)
+        }
+    }
+}
+
+/// Seletor em pílula (Tarefa | Compromisso, Dia | Semana | Mês...).
+struct SegmentoPilula<Valor: Hashable>: View {
+    let opcoes: [Valor]
+    @Binding var selecao: Valor
+    let titulo: (Valor) -> String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(opcoes, id: \.self) { opcao in
+                let ativo = opcao == selecao
+                Button {
+                    withAnimation(.snappy(duration: 0.25)) { selecao = opcao }
+                } label: {
+                    Text(titulo(opcao))
+                        .font(.subheadline.weight(ativo ? .semibold : .regular))
+                        .foregroundStyle(ativo ? Color.primary : Color.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background {
+                            if ativo {
+                                Capsule().fill(Theme.card)
+                                    .shadow(color: .black.opacity(0.08), radius: 4, y: 1)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(Theme.suave, in: Capsule())
+    }
+}
+
+struct Chip: View {
+    let texto: String
+    var icone: String? = nil
+    var cor: Color = .secondary
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if let icone { Image(systemName: icone) }
+            Text(texto).lineLimit(1)
+        }
+        .font(.caption.weight(.medium))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .foregroundStyle(cor)
+        .background(cor.opacity(0.12), in: Capsule())
+    }
+}
+
+// MARK: - Outros
+
+struct EstadoVazio: View {
+    let titulo: String
+    var texto: String? = nil
+    var botao: String? = nil
+    var acao: () -> Void = {}
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Text(titulo)
+                .font(.headline)
+            if let texto {
+                Text(texto)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            if let botao {
+                Button(action: acao) {
+                    Label(botao, systemImage: "plus")
+                }
+                .buttonStyle(PilulaStyle())
+                .padding(.top, 6)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .padding(.horizontal, 24)
     }
 }
 
 struct TituloSecao: View {
     let titulo: String
-    let icone: String
-    var cor: Color = Theme.lilas
     var detalhe: String? = nil
+    var cor: Color = .primary
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icone)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(cor)
+        HStack {
             Text(titulo)
-                .font(.headline)
+                .font(.system(.title3, design: .serif))
+                .foregroundStyle(cor)
             Spacer()
             if let detalhe {
-                Text(detalhe)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Text(detalhe).font(.subheadline).foregroundStyle(.secondary)
             }
         }
-    }
-}
-
-struct CartaoVazio: View {
-    let texto: String
-    var icone: String = "sparkles"
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icone)
-                .foregroundStyle(Theme.lilas)
-            Text(texto)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .card()
     }
 }
 
@@ -99,179 +396,124 @@ struct AvatarCliente: View {
 
     var body: some View {
         Text(cliente.iniciais)
-            .font(.system(size: tamanho * 0.38, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
+            .font(.system(size: tamanho * 0.38, weight: .medium, design: .serif))
+            .foregroundStyle(cliente.cor)
             .frame(width: tamanho, height: tamanho)
-            .background(cliente.cor.gradient, in: Circle())
+            .background(cliente.cor.opacity(0.15), in: Circle())
     }
 }
 
-/// Barra horizontal de filtro por frente (Todas / China Link / Freela / Pessoal).
-struct FiltroFrente: View {
-    @Binding var selecao: Frente?
+// MARK: - Linha de atividade
 
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                botao(nil, "Todas", "square.stack.fill", Theme.lilas)
-                ForEach(Frente.allCases) { frente in
-                    botao(frente, frente.rawValue, frente.icone, frente.cor)
-                }
-            }
-            .padding(.horizontal, 2)
-        }
-    }
-
-    private func botao(_ frente: Frente?, _ texto: String, _ icone: String, _ cor: Color) -> some View {
-        let ativo = selecao == frente
-        return Button {
-            withAnimation(.snappy) { selecao = frente }
-        } label: {
-            Label(texto, systemImage: icone)
-                .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .foregroundStyle(ativo ? Color.white : cor)
-                .background(ativo ? cor : cor.opacity(0.12), in: Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Linhas
-
-struct TarefaRow: View {
-    let tarefa: Tarefa
-    var mostrarFrente = true
-    var onTap: () -> Void = {}
+struct AtividadeRow: View {
+    @Environment(\.modelContext) private var context
+    @Environment(AppEstado.self) private var app
+    let atividade: Atividade
+    /// Dia em que está sendo exibida (para mostrar o horário certo de repetições).
+    var dia: Date? = nil
+    var mostrarData = true
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Button {
-                withAnimation(.snappy) {
-                    tarefa.alternarConclusao()
-                    Notificacoes.atualizar(tarefa)
-                }
-            } label: {
-                Image(systemName: tarefa.concluida ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(tarefa.concluida ? Theme.menta : tarefa.frente.cor)
-                    .contentTransition(.symbolEffect(.replace))
-            }
-            .buttonStyle(.plain)
+            marcador
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(tarefa.titulo.isEmpty ? "Sem título" : tarefa.titulo)
-                        .font(.body.weight(.medium))
-                        .strikethrough(tarefa.concluida)
-                        .foregroundStyle(tarefa.concluida ? Color.secondary : Color.primary)
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(atividade.titulo.isEmpty ? "Sem título" : atividade.titulo)
+                        .font(.body)
+                        .strikethrough(!atividade.aberta)
+                        .foregroundStyle(atividade.aberta ? Color.primary : Color.secondary)
                         .lineLimit(2)
                     Spacer(minLength: 4)
-                    if tarefa.prioridade == .alta && !tarefa.concluida {
-                        Image(systemName: "flag.fill")
-                            .font(.caption)
-                            .foregroundStyle(Theme.vermelho)
+                    if atividade.prioridade == .alta && atividade.aberta {
+                        Image(systemName: "flag.fill").font(.caption2).foregroundStyle(Theme.alerta)
                     }
                 }
 
                 HStack(spacing: 6) {
-                    Chip(texto: tarefa.tipo.rawValue, icone: tarefa.tipo.icone, cor: tarefa.tipo.cor)
-                    if let cliente = tarefa.cliente {
-                        Chip(texto: cliente.nome, cor: cliente.cor)
-                    } else if mostrarFrente {
-                        Chip(texto: tarefa.frente.rawValue, cor: tarefa.frente.cor)
+                    Circle().fill(atividade.contexto.cor).frame(width: 6, height: 6)
+                    Text(atividade.cliente?.nome ?? atividade.contexto.rawValue)
+                        .lineLimit(1)
+                    if let texto = textoQuando {
+                        Text("·")
+                        Text(texto)
+                            .foregroundStyle(atividade.atrasada ? Theme.alerta : Color.secondary)
+                            .lineLimit(1)
                     }
-                    if let prazo = tarefa.prazo {
-                        Chip(
-                            texto: Fmt.prazo(prazo),
-                            icone: tarefa.atrasada ? "exclamationmark.circle.fill" : "clock",
-                            cor: tarefa.atrasada ? Theme.vermelho : .secondary
-                        )
+                    if atividade.repeticao != .nunca {
+                        Image(systemName: "repeat")
                     }
-                    if tarefa.status == .fazendo || tarefa.status == .aprovacao {
-                        Chip(texto: tarefa.status.rawValue, icone: tarefa.status.icone, cor: tarefa.status.cor)
+                    if !atividade.lembretes.isEmpty && atividade.aberta {
+                        Image(systemName: "bell")
+                    }
+                    if atividade.status == .cancelada {
+                        Text("· Cancelada")
                     }
                 }
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-                if let progresso = tarefa.progressoEtapas, !tarefa.concluida {
+                if let progresso = atividade.progressoEtapas, atividade.aberta {
                     HStack(spacing: 8) {
-                        ProgressView(value: progresso)
-                            .tint(tarefa.frente.cor)
-                        let feitas = (tarefa.etapas ?? []).filter(\.feita).count
-                        Text("\(feitas)/\(tarefa.etapas?.count ?? 0)")
+                        ProgressView(value: progresso).tint(atividade.contexto.cor)
+                        Text("\((atividade.etapas ?? []).filter(\.feita).count)/\(atividade.etapas?.count ?? 0)")
                             .font(.caption2.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture(perform: onTap)
         }
-        .padding(.vertical, 4)
-    }
-}
-
-struct CompromissoRow: View {
-    let compromisso: Compromisso
-    var onTap: () -> Void = {}
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(Fmt.hora.string(from: compromisso.inicio))
-                    .font(.subheadline.weight(.bold).monospacedDigit())
-                Text(Fmt.hora.string(from: compromisso.fim))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-            .frame(width: 48, alignment: .trailing)
-
-            RoundedRectangle(cornerRadius: 2)
-                .fill(compromisso.tipo.cor)
-                .frame(width: 4)
-
-            VStack(alignment: .leading, spacing: 5) {
-                HStack {
-                    Text(compromisso.titulo.isEmpty ? "Sem título" : compromisso.titulo)
-                        .font(.body.weight(.medium))
-                        .lineLimit(2)
-                    if compromisso.acontecendoAgora {
-                        Text("AGORA")
-                            .font(.caption2.weight(.heavy))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .foregroundStyle(.white)
-                            .background(Theme.vermelho, in: Capsule())
-                    }
-                }
-                HStack(spacing: 6) {
-                    Chip(texto: compromisso.tipo.rawValue, icone: compromisso.tipo.icone, cor: compromisso.tipo.cor)
-                    if let cliente = compromisso.cliente {
-                        Chip(texto: cliente.nome, cor: cliente.cor)
-                    } else {
-                        Chip(texto: compromisso.frente.rawValue, cor: compromisso.frente.cor)
-                    }
-                }
-                if !compromisso.local.isEmpty {
-                    Label(compromisso.local, systemImage: "mappin.and.ellipse")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-            Spacer(minLength: 0)
-            if let url = compromisso.url {
-                Link(destination: url) {
-                    Image(systemName: "video.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(compromisso.tipo.cor)
-                }
-            }
-        }
-        .opacity(compromisso.jaPassou ? 0.55 : 1)
+        .padding(.vertical, 6)
         .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
-        .padding(.vertical, 4)
+        .onTapGesture { app.editando = atividade }
+    }
+
+    @ViewBuilder
+    private var marcador: some View {
+        if atividade.ehCompromisso {
+            Image(systemName: "calendar")
+                .font(.system(size: 13))
+                .foregroundStyle(atividade.contexto.cor)
+                .frame(width: 26, height: 26)
+                .background(atividade.contexto.cor.opacity(0.14), in: Circle())
+        } else {
+            Button {
+                withAnimation(.snappy) { Acoes.alternarConclusao(atividade, context: context) }
+            } label: {
+                ZStack {
+                    Circle()
+                        .stroke(atividade.status == .aberta ? Theme.borda : Color.clear, lineWidth: 1.5)
+                    if atividade.status == .concluida {
+                        Circle().fill(Theme.acento)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Theme.textoNoAcento)
+                    } else if atividade.status == .cancelada {
+                        Circle().fill(Theme.suave)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 26, height: 26)
+            }
+            .buttonStyle(.plain)
+            .disabled(atividade.status == .cancelada)
+        }
+    }
+
+    private var textoQuando: String? {
+        guard mostrarData || atividade.temHorario, let data = atividade.data else { return nil }
+        if !mostrarData {
+            let inicio = (dia.flatMap { atividade.inicio(em: $0) }) ?? data
+            if atividade.ehCompromisso, let fim = atividade.fimEfetivo {
+                let duracao = fim.timeIntervalSince(data)
+                return "\(Fmt.hora.string(from: inicio))–\(Fmt.hora.string(from: inicio.addingTimeInterval(duracao)))"
+            }
+            return Fmt.hora.string(from: inicio)
+        }
+        let referencia = atividade.ehCompromisso ? (atividade.proximaOcorrencia() ?? data) : data
+        let inicio = atividade.inicio(em: referencia) ?? referencia
+        return Fmt.quando(inicio, temHorario: atividade.temHorario)
     }
 }

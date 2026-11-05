@@ -4,19 +4,19 @@ App de iOS (SwiftUI + SwiftData) para organizar a rotina de quem trabalha como *
 
 ## O que o app faz
 
+Inspirado num app minimalista de referência: fundo off-white, títulos serifados e botões em pílula preta. As cores da marca da Hanna (preto + vinho) ainda vão entrar.
+
 | Aba | Para quê |
 |---|---|
-| **Hoje** | Saudação, progresso do dia, reuniões de hoje, entregas de hoje, atrasadas, aguardando aprovação e próximos 7 dias |
-| **Tarefas** | Todas as tarefas agrupadas por status (A fazer → Fazendo → Em aprovação → Concluída), filtro por frente (China Link / Freela / Pessoal), busca, swipe para concluir/apagar, toque longo para mudar o status |
-| **Agenda** | Semana com marcadores (azul = compromisso, rosa = entrega), calendário do mês, reuniões com link do Meet/Zoom e entregas do dia |
-| **Clientes** | Clientes do freela com cor, nicho, @instagram, WhatsApp, valor mensal (soma da renda extra) e todas as entregas/reuniões de cada um |
+| **Hoje** | "Bom dia, Hanna", progresso do dia, agenda de hoje, atrasadas, o que vence hoje e os próximos dias |
+| **Tarefas** | Busca + filtros Abertas / Concluídas / Canceladas / Só tarefas / Só compromissos e por contexto; agrupado por Atrasadas, Hoje, Amanhã, Próximos 7 dias... Deslize para concluir, cancelar ou apagar |
+| **+ (centro)** | "Nova atividade": Tarefa ou Compromisso, vencimento e horário opcionais, contexto, cliente e "Mais opções" (prioridade, repetição, vários lembretes, descrição, local/link, tipo de trabalho e etapas) |
+| **Agenda** | Dia / Semana (3 dias) / Mês, linha do tempo por hora com a hora atual marcada e faixa "Sem hora". Toque num horário vazio para criar um compromisso |
+| **Clientes** | Ativos / Arquivados, busca, renda extra mensal e todas as atividades de cada cliente |
 
-Detalhes pensados pra rotina de marketing:
-- **Tipos de tarefa**: Copy, Roteiro, Vídeo, Design, Post, Stories, Planejamento.
-- **Etapas sugeridas** por tipo (ex.: Vídeo → Roteiro, Gravação, Edição, Legenda + capa, Aprovação, Postar), com barra de progresso.
-- **Lembretes** (notificações locais) no prazo da tarefa e X minutos antes de cada reunião.
-- Campo de **briefing / notas / links** em cada tarefa e **pauta** em cada reunião.
-- Modo claro e escuro, tudo em português, dados salvos só no iPhone.
+Contextos: **China Link, Freela, Pessoal, Faculdade e Igreja**.
+
+O sininho mostra os próximos lembretes e o avatar abre os Ajustes (nome, notificações, limpeza de itens antigos).
 
 ## Como instalar no iPhone
 
@@ -35,9 +35,9 @@ Precisa de um **Mac com Xcode 16 ou mais novo** (o projeto usa pastas sincroniza
 ```
 Organiza/
 ├── App/          OrganizaApp, Theme (cores/datas), Notificacoes
-├── Models/       Tarefa, Etapa, Compromisso, Cliente (SwiftData) + enums
-├── Components/   Chips, anel de progresso, linhas de tarefa/compromisso
-├── Views/        Hoje, Tarefas, Agenda, Clientes, editores e Ajustes
+├── Models/       Atividade, Etapa, Cliente (SwiftData), enums e ações
+├── Components/   Cabeçalho, barra de abas, chips, linha de atividade
+├── Views/        Hoje, Tarefas, Agenda, Clientes, Nova atividade, Ajustes
 └── Assets.xcassets
 ```
 

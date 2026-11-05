@@ -7,17 +7,20 @@ struct AjustesView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
-    @AppStorage("nomeUsuaria") private var nome = ""
+    @AppStorage("nomeUsuaria") private var nome = "Hanna"
 
-    @Query private var tarefas: [Tarefa]
+    @Query private var atividades: [Atividade]
     @State private var notificacoesAtivas: Bool?
     @State private var confirmarLimpeza = false
 
-    private var concluidasAntigas: [Tarefa] {
+    private var antigas: [Atividade] {
         let limite = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        return tarefas.filter { t in
-            guard t.concluida, let data = t.concluidaEm else { return false }
-            return data < limite
+        return atividades.filter { a in
+            switch a.status {
+            case .concluida: return (a.concluidaEm ?? a.criadaEm) < limite
+            case .cancelada: return a.criadaEm < limite
+            case .aberta: return a.jaPassou && (a.fimEfetivo ?? Date()) < limite
+            }
         }
     }
 
@@ -25,21 +28,34 @@ struct AjustesView: View {
         NavigationStack {
             Form {
                 Section {
+                    HStack(spacing: 14) {
+                        LogoHB(tamanho: 48)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("HB Organiza").font(.system(.headline, design: .serif))
+                            Text("Feito com carinho para a \(nome.isEmpty ? "Hanna" : nome) 💜")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                Section {
                     TextField("Seu nome", text: $nome)
                         .textInputAutocapitalization(.words)
                 } header: {
-                    Text("Como posso te chamar?")
+                    Text("Como te chamar")
                 } footer: {
                     Text("Aparece na saudação da tela Hoje.")
                 }
 
                 Section("Lembretes") {
                     HStack {
-                        Label("Notificações", systemImage: "bell.badge.fill")
+                        Label("Notificações", systemImage: "bell")
                         Spacer()
                         switch notificacoesAtivas {
                         case .some(true):
-                            Text("Ativas").foregroundStyle(Theme.menta)
+                            Text("Ativas").foregroundStyle(.secondary)
                         case .some(false):
                             Button("Ativar") { abrirAjustesDoSistema() }
                         case .none:
@@ -52,19 +68,17 @@ struct AjustesView: View {
                     Button(role: .destructive) {
                         confirmarLimpeza = true
                     } label: {
-                        Label("Limpar concluídas há mais de 30 dias (\(concluidasAntigas.count))", systemImage: "sparkles")
+                        Label("Limpar itens antigos (\(antigas.count))", systemImage: "sparkles")
                     }
-                    .disabled(concluidasAntigas.isEmpty)
+                    .disabled(antigas.isEmpty)
                 } header: {
                     Text("Organização")
-                }
-
-                Section {
-                    Text("Feito com 💜 para organizar a rotina entre a China Link e os clientes de social media.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                } footer: {
+                    Text("Apaga tarefas concluídas ou canceladas e compromissos que já passaram há mais de 30 dias.")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.fundo)
             .navigationTitle("Ajustes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -72,10 +86,10 @@ struct AjustesView: View {
                     Button("OK") { dismiss() }
                 }
             }
-            .confirmationDialog("Apagar \(concluidasAntigas.count) tarefas antigas?",
+            .confirmationDialog("Apagar \(antigas.count) itens antigos?",
                                 isPresented: $confirmarLimpeza, titleVisibility: .visible) {
                 Button("Apagar", role: .destructive) {
-                    for t in concluidasAntigas { context.delete(t) }
+                    for a in antigas { Acoes.apagar(a, context: context) }
                     try? context.save()
                 }
             }
@@ -84,9 +98,10 @@ struct AjustesView: View {
     }
 
     private func verificarNotificacoes() async {
-        let ajustes = await UNUserNotificationCenter.current().notificationSettings()
+        let centro = UNUserNotificationCenter.current()
+        let ajustes = await centro.notificationSettings()
         if ajustes.authorizationStatus == .notDetermined {
-            let ok = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+            let ok = (try? await centro.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
             notificacoesAtivas = ok
         } else {
             notificacoesAtivas = ajustes.authorizationStatus == .authorized
@@ -97,6 +112,73 @@ struct AjustesView: View {
     private func abrirAjustesDoSistema() {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             openURL(url)
+        }
+    }
+}
+
+/// Aberta pelo sininho: próximos lembretes agendados.
+struct LembretesView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query private var atividades: [Atividade]
+
+    private struct Item: Identifiable {
+        let atividade: Atividade
+        let quando: Date
+        let minutos: Int
+        var id: String { "\(atividade.uid.uuidString)-\(minutos)-\(quando.timeIntervalSince1970)" }
+    }
+
+    private var proximos: [Item] {
+        let agora = Date()
+        let limite = Calendar.current.date(byAdding: .day, value: 14, to: agora) ?? agora
+        var lista: [Item] = []
+        for a in atividades where a.aberta && !a.lembretes.isEmpty {
+            guard let base = a.momentoLembrete else { continue }
+            // para compromissos repetidos, usa a próxima ocorrência
+            var referencia = base
+            if a.ehCompromisso, a.repeticao != .nunca,
+               let dia = a.proximaOcorrencia(), let inicio = a.inicio(em: dia) {
+                referencia = inicio
+            }
+            for m in a.lembretes {
+                let quando = referencia.addingTimeInterval(TimeInterval(-m * 60))
+                if quando > agora && quando < limite {
+                    lista.append(Item(atividade: a, quando: quando, minutos: m))
+                }
+            }
+        }
+        return lista.sorted { $0.quando < $1.quando }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if proximos.isEmpty {
+                    Text("Nenhum lembrete nos próximos 14 dias.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(proximos) { item in
+                        HStack(alignment: .top, spacing: 12) {
+                            Circle().fill(item.atividade.contexto.cor).frame(width: 8, height: 8).padding(.top, 6)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(item.atividade.titulo)
+                                Text("\(Fmt.quando(item.quando, temHorario: true)) · \(OpcoesLembrete.nome(item.minutos))")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.fundo)
+            .navigationTitle("Próximos lembretes")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }
+                }
+            }
         }
     }
 }

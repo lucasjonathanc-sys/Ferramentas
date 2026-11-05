@@ -4,117 +4,50 @@ import SwiftUI
 
 // MARK: - Enums
 
-/// Em qual "frente" de trabalho a tarefa/compromisso se encaixa.
-enum Frente: String, CaseIterable, Identifiable {
+/// Área da vida a que a atividade pertence (os chips com bolinha colorida).
+enum Contexto: String, CaseIterable, Identifiable {
     case chinaLink = "China Link"
     case freela = "Freela"
     case pessoal = "Pessoal"
+    case faculdade = "Faculdade"
+    case igreja = "Igreja"
 
     var id: String { rawValue }
 
+    var cor: Color {
+        switch self {
+        case .chinaLink: return Color(hex: "8E7CC3")
+        case .freela: return Color(hex: "C97B8E")
+        case .pessoal: return Color(hex: "7FA37A")
+        case .faculdade: return Color(hex: "6F93C9")
+        case .igreja: return Color(hex: "C9A15B")
+        }
+    }
+
     var icone: String {
         switch self {
-        case .chinaLink: return "building.2.fill"
+        case .chinaLink: return "building.2"
         case .freela: return "camera.aperture"
-        case .pessoal: return "heart.fill"
-        }
-    }
-
-    var cor: Color {
-        switch self {
-        case .chinaLink: return Theme.vermelho
-        case .freela: return Theme.lilas
-        case .pessoal: return Theme.rosa
-        }
-    }
-
-    var descricao: String {
-        switch self {
-        case .chinaLink: return "Copywriting na empresa"
-        case .freela: return "Social media para clientes"
-        case .pessoal: return "Vida pessoal"
+        case .pessoal: return "heart"
+        case .faculdade: return "graduationcap"
+        case .igreja: return "sparkles"
         }
     }
 }
 
-enum TipoTarefa: String, CaseIterable, Identifiable {
-    case copy = "Copy"
-    case roteiro = "Roteiro"
-    case video = "Vídeo"
-    case design = "Design"
-    case post = "Post"
-    case stories = "Stories"
-    case planejamento = "Planejamento"
-    case outro = "Outro"
+enum TipoAtividade: String, CaseIterable, Identifiable {
+    case tarefa = "Tarefa"
+    case compromisso = "Compromisso"
 
     var id: String { rawValue }
-
-    var icone: String {
-        switch self {
-        case .copy: return "text.quote"
-        case .roteiro: return "doc.text.fill"
-        case .video: return "video.fill"
-        case .design: return "paintpalette.fill"
-        case .post: return "square.grid.3x3.fill"
-        case .stories: return "circle.dashed"
-        case .planejamento: return "calendar.badge.clock"
-        case .outro: return "sparkle"
-        }
-    }
-
-    var cor: Color {
-        switch self {
-        case .copy: return Theme.azul
-        case .roteiro: return Theme.azul
-        case .video: return Theme.pessego
-        case .design: return Theme.rosa
-        case .post: return Theme.lilas
-        case .stories: return Theme.amarelo
-        case .planejamento: return Theme.menta
-        case .outro: return .gray
-        }
-    }
-
-    /// Etapas sugeridas de acordo com o tipo de trabalho.
-    var etapasSugeridas: [String] {
-        switch self {
-        case .copy: return ["Ler briefing", "Pesquisa", "Rascunho", "Revisão", "Enviar p/ aprovação"]
-        case .roteiro: return ["Ideia / gancho", "Estrutura", "Escrever roteiro", "Aprovação"]
-        case .video: return ["Roteiro", "Gravação", "Edição", "Legenda + capa", "Aprovação", "Postar"]
-        case .design: return ["Briefing", "Referências", "Criação", "Ajustes", "Aprovação", "Exportar"]
-        case .post: return ["Arte", "Legenda", "Hashtags", "Aprovação", "Agendar / postar"]
-        case .stories: return ["Captar conteúdo", "Montar sequência", "Postar"]
-        case .planejamento: return ["Levantar datas", "Definir pautas", "Montar calendário", "Apresentar"]
-        case .outro: return []
-        }
-    }
 }
 
-enum StatusTarefa: String, CaseIterable, Identifiable {
-    case aFazer = "A fazer"
-    case fazendo = "Fazendo"
-    case aprovacao = "Em aprovação"
+enum StatusAtividade: String, CaseIterable, Identifiable {
+    case aberta = "Aberta"
     case concluida = "Concluída"
+    case cancelada = "Cancelada"
 
     var id: String { rawValue }
-
-    var icone: String {
-        switch self {
-        case .aFazer: return "circle"
-        case .fazendo: return "circle.lefthalf.filled"
-        case .aprovacao: return "hourglass"
-        case .concluida: return "checkmark.circle.fill"
-        }
-    }
-
-    var cor: Color {
-        switch self {
-        case .aFazer: return .gray
-        case .fazendo: return Theme.azul
-        case .aprovacao: return Theme.amarelo
-        case .concluida: return Theme.menta
-        }
-    }
 }
 
 enum Prioridade: Int, CaseIterable, Identifiable {
@@ -133,35 +66,116 @@ enum Prioridade: Int, CaseIterable, Identifiable {
     }
 }
 
-enum TipoCompromisso: String, CaseIterable, Identifiable {
-    case reuniao = "Reunião"
-    case call = "Call"
-    case gravacao = "Gravação"
-    case entrega = "Entrega"
-    case evento = "Evento"
-    case pessoal = "Pessoal"
+enum Repeticao: String, CaseIterable, Identifiable {
+    case nunca = "Não se repete"
+    case diaria = "Todo dia"
+    case diasUteis = "Dias úteis (seg a sex)"
+    case semanal = "Toda semana"
+    case mensal = "Todo mês"
+    case anual = "Todo ano"
+
+    var id: String { rawValue }
+
+    var curto: String {
+        switch self {
+        case .nunca: return ""
+        case .diaria: return "Diária"
+        case .diasUteis: return "Dias úteis"
+        case .semanal: return "Semanal"
+        case .mensal: return "Mensal"
+        case .anual: return "Anual"
+        }
+    }
+
+    /// Próxima data depois de `data` seguindo a regra.
+    func proxima(depois data: Date) -> Date? {
+        let cal = Calendar.current
+        switch self {
+        case .nunca: return nil
+        case .diaria: return cal.date(byAdding: .day, value: 1, to: data)
+        case .diasUteis:
+            var d = cal.date(byAdding: .day, value: 1, to: data) ?? data
+            while cal.isDateInWeekend(d) {
+                d = cal.date(byAdding: .day, value: 1, to: d) ?? d
+            }
+            return d
+        case .semanal: return cal.date(byAdding: .weekOfYear, value: 1, to: data)
+        case .mensal: return cal.date(byAdding: .month, value: 1, to: data)
+        case .anual: return cal.date(byAdding: .year, value: 1, to: data)
+        }
+    }
+
+    /// Se uma atividade que começa em `inicio` acontece também em `dia`.
+    func ocorre(inicio: Date, em dia: Date) -> Bool {
+        let cal = Calendar.current
+        let diaInicio = cal.startOfDay(for: inicio)
+        let alvo = cal.startOfDay(for: dia)
+        if alvo == diaInicio { return true }
+        guard alvo > diaInicio else { return false }
+        switch self {
+        case .nunca: return false
+        case .diaria: return true
+        case .diasUteis: return !cal.isDateInWeekend(alvo)
+        case .semanal: return cal.component(.weekday, from: alvo) == cal.component(.weekday, from: diaInicio)
+        case .mensal: return cal.component(.day, from: alvo) == cal.component(.day, from: diaInicio)
+        case .anual:
+            return cal.component(.day, from: alvo) == cal.component(.day, from: diaInicio)
+                && cal.component(.month, from: alvo) == cal.component(.month, from: diaInicio)
+        }
+    }
+}
+
+/// Opções de lembrete (minutos antes).
+enum OpcoesLembrete {
+    static let todas: [Int] = [0, 5, 15, 30, 60, 120, 1440, 2880]
+
+    static func nome(_ minutos: Int) -> String {
+        switch minutos {
+        case 0: return "Na hora"
+        case 1440: return "1 dia antes"
+        case 2880: return "2 dias antes"
+        case let m where m >= 60 && m % 60 == 0: return "\(m / 60) h antes"
+        default: return "\(minutos) min antes"
+        }
+    }
+}
+
+/// Tipo de trabalho de marketing (opcional, em "Mais opções").
+enum TipoTrabalho: String, CaseIterable, Identifiable {
+    case nenhum = "Nenhum"
+    case copy = "Copy"
+    case roteiro = "Roteiro"
+    case video = "Vídeo"
+    case design = "Design"
+    case post = "Post"
+    case stories = "Stories"
+    case planejamento = "Planejamento"
 
     var id: String { rawValue }
 
     var icone: String {
         switch self {
-        case .reuniao: return "person.3.fill"
-        case .call: return "video.bubble.fill"
-        case .gravacao: return "camera.fill"
-        case .entrega: return "shippingbox.fill"
-        case .evento: return "star.fill"
-        case .pessoal: return "heart.fill"
+        case .nenhum: return "circle.dashed"
+        case .copy: return "text.quote"
+        case .roteiro: return "doc.text"
+        case .video: return "video"
+        case .design: return "paintpalette"
+        case .post: return "square.grid.3x3"
+        case .stories: return "circle.dashed"
+        case .planejamento: return "calendar.badge.clock"
         }
     }
 
-    var cor: Color {
+    var etapasSugeridas: [String] {
         switch self {
-        case .reuniao: return Theme.azul
-        case .call: return Theme.lilas
-        case .gravacao: return Theme.pessego
-        case .entrega: return Theme.vermelho
-        case .evento: return Theme.amarelo
-        case .pessoal: return Theme.rosa
+        case .nenhum: return []
+        case .copy: return ["Ler briefing", "Pesquisa", "Rascunho", "Revisão", "Enviar p/ aprovação"]
+        case .roteiro: return ["Ideia / gancho", "Estrutura", "Escrever roteiro", "Aprovação"]
+        case .video: return ["Roteiro", "Gravação", "Edição", "Legenda + capa", "Aprovação", "Postar"]
+        case .design: return ["Briefing", "Referências", "Criação", "Ajustes", "Aprovação", "Exportar"]
+        case .post: return ["Arte", "Legenda", "Hashtags", "Aprovação", "Agendar / postar"]
+        case .stories: return ["Captar conteúdo", "Montar sequência", "Postar"]
+        case .planejamento: return ["Levantar datas", "Definir pautas", "Montar calendário", "Apresentar"]
         }
     }
 }
@@ -176,16 +190,13 @@ final class Cliente {
     var instagram: String = ""
     var contato: String = ""
     var valorMensal: Double = 0
-    var corHex: String = "9B7BF7"
+    var corHex: String = "C97B8E"
     var observacoes: String = ""
     var ativo: Bool = true
     var criadoEm: Date = Date()
 
-    @Relationship(deleteRule: .nullify, inverse: \Tarefa.cliente)
-    var tarefas: [Tarefa]? = []
-
-    @Relationship(deleteRule: .nullify, inverse: \Compromisso.cliente)
-    var compromissos: [Compromisso]? = []
+    @Relationship(deleteRule: .nullify, inverse: \Atividade.cliente)
+    var atividades: [Atividade]? = []
 
     init(nome: String = "") {
         self.nome = nome
@@ -194,58 +205,67 @@ final class Cliente {
     var cor: Color { Color(hex: corHex) }
 
     var iniciais: String {
-        let partes = nome.split(separator: " ").prefix(2)
-        let letras = partes.compactMap { $0.first }.map { String($0) }.joined()
+        let letras = nome.split(separator: " ").prefix(2).compactMap { $0.first }.map { String($0) }.joined()
         return letras.isEmpty ? "?" : letras.uppercased()
     }
 
-    var tarefasPendentes: [Tarefa] {
-        (tarefas ?? []).filter { !$0.concluida }.sorted(by: Tarefa.ordenacao)
+    var abertas: [Atividade] {
+        (atividades ?? []).filter { $0.status == .aberta }.sorted(by: Atividade.ordenacao)
     }
 
     var linkInstagram: URL? {
-        let user = instagram
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "@", with: "")
+        let user = instagram.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "@", with: "")
         guard !user.isEmpty else { return nil }
         return URL(string: "https://instagram.com/\(user)")
     }
 }
 
+/// Uma tarefa ou um compromisso (como em "Nova atividade").
 @Model
-final class Tarefa {
+final class Atividade {
     var uid: UUID = UUID()
+    var tipoRaw: String = TipoAtividade.tarefa.rawValue
     var titulo: String = ""
-    var notas: String = ""
-    var frenteRaw: String = Frente.chinaLink.rawValue
-    var tipoRaw: String = TipoTarefa.copy.rawValue
-    var statusRaw: String = StatusTarefa.aFazer.rawValue
+    var descricao: String = ""
+    var contextoRaw: String = Contexto.chinaLink.rawValue
+    var statusRaw: String = StatusAtividade.aberta.rawValue
     var prioridadeRaw: Int = Prioridade.media.rawValue
-    var prazo: Date?
-    var lembrete: Bool = false
+    /// Vencimento (tarefa) ou início (compromisso). Tarefa pode não ter data.
+    var data: Date?
+    /// Se `false`, a atividade é "sem hora" (só o dia importa).
+    var temHorario: Bool = false
+    /// Fim do compromisso.
+    var fim: Date?
+    var repeticaoRaw: String = Repeticao.nunca.rawValue
+    /// Minutos antes para cada lembrete.
+    var lembretes: [Int] = []
+    var local: String = ""
+    var link: String = ""
+    var trabalhoRaw: String = TipoTrabalho.nenhum.rawValue
     var criadaEm: Date = Date()
     var concluidaEm: Date?
     var cliente: Cliente?
 
-    @Relationship(deleteRule: .cascade, inverse: \Etapa.tarefa)
+    @Relationship(deleteRule: .cascade, inverse: \Etapa.atividade)
     var etapas: [Etapa]? = []
 
-    init(titulo: String = "") {
+    init(tipo: TipoAtividade = .tarefa, titulo: String = "") {
+        self.tipoRaw = tipo.rawValue
         self.titulo = titulo
     }
 
-    var frente: Frente {
-        get { Frente(rawValue: frenteRaw) ?? .chinaLink }
-        set { frenteRaw = newValue.rawValue }
-    }
-
-    var tipo: TipoTarefa {
-        get { TipoTarefa(rawValue: tipoRaw) ?? .outro }
+    var tipo: TipoAtividade {
+        get { TipoAtividade(rawValue: tipoRaw) ?? .tarefa }
         set { tipoRaw = newValue.rawValue }
     }
 
-    var status: StatusTarefa {
-        get { StatusTarefa(rawValue: statusRaw) ?? .aFazer }
+    var contexto: Contexto {
+        get { Contexto(rawValue: contextoRaw) ?? .pessoal }
+        set { contextoRaw = newValue.rawValue }
+    }
+
+    var status: StatusAtividade {
+        get { StatusAtividade(rawValue: statusRaw) ?? .aberta }
         set { statusRaw = newValue.rawValue }
     }
 
@@ -254,11 +274,42 @@ final class Tarefa {
         set { prioridadeRaw = newValue.rawValue }
     }
 
-    var concluida: Bool { status == .concluida }
+    var repeticao: Repeticao {
+        get { Repeticao(rawValue: repeticaoRaw) ?? .nunca }
+        set { repeticaoRaw = newValue.rawValue }
+    }
+
+    var trabalho: TipoTrabalho {
+        get { TipoTrabalho(rawValue: trabalhoRaw) ?? .nenhum }
+        set { trabalhoRaw = newValue.rawValue }
+    }
+
+    var ehCompromisso: Bool { tipo == .compromisso }
+    var aberta: Bool { status == .aberta }
+
+    /// Momento usado como referência para atraso e lembretes
+    /// (sem horário: 9h do dia para lembretes, fim do dia para atraso).
+    var momentoLembrete: Date? {
+        guard let data else { return nil }
+        if temHorario { return data }
+        return Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: data)
+    }
 
     var atrasada: Bool {
-        guard let prazo, !concluida else { return false }
-        return prazo < Date()
+        guard aberta, !ehCompromisso, let data else { return false }
+        if temHorario { return data < Date() }
+        return Calendar.current.startOfDay(for: data) < Calendar.current.startOfDay(for: Date())
+    }
+
+    var fimEfetivo: Date? {
+        guard let data else { return nil }
+        if let fim, fim > data { return fim }
+        return data.addingTimeInterval(ehCompromisso ? 3600 : 1800)
+    }
+
+    var jaPassou: Bool {
+        guard ehCompromisso, repeticao == .nunca, let fim = fimEfetivo else { return false }
+        return fim < Date()
     }
 
     var etapasOrdenadas: [Etapa] {
@@ -271,21 +322,44 @@ final class Tarefa {
         return Double(todas.filter(\.feita).count) / Double(todas.count)
     }
 
-    func alternarConclusao() {
-        if concluida {
-            status = .aFazer
-            concluidaEm = nil
-        } else {
-            status = .concluida
-            concluidaEm = Date()
-        }
+    /// Se a atividade aparece no dia (considerando repetição de compromissos).
+    func aparece(em dia: Date) -> Bool {
+        guard let data else { return false }
+        if ehCompromisso { return repeticao.ocorre(inicio: data, em: dia) }
+        return Calendar.current.isDate(data, inSameDayAs: dia)
     }
 
-    /// Pendentes primeiro, depois por prazo (sem prazo por último) e prioridade.
-    static func ordenacao(_ a: Tarefa, _ b: Tarefa) -> Bool {
-        if a.concluida != b.concluida { return !a.concluida }
-        switch (a.prazo, b.prazo) {
-        case let (pa?, pb?) where pa != pb: return pa < pb
+    /// Horário de início dessa atividade num dia específico (para repetições).
+    func inicio(em dia: Date) -> Date? {
+        guard let data else { return nil }
+        let cal = Calendar.current
+        let c = cal.dateComponents([.hour, .minute], from: data)
+        return cal.date(bySettingHour: c.hour ?? 0, minute: c.minute ?? 0, second: 0, of: dia)
+    }
+
+    /// Próximo dia (a partir de hoje) em que um compromisso repetido acontece.
+    func proximaOcorrencia(aPartirDe hoje: Date = Date()) -> Date? {
+        guard let data else { return nil }
+        guard ehCompromisso, repeticao != .nunca else { return data }
+        let cal = Calendar.current
+        var dia = max(cal.startOfDay(for: hoje), cal.startOfDay(for: data))
+        for _ in 0..<400 {
+            if repeticao.ocorre(inicio: data, em: dia) { return dia }
+            dia = cal.date(byAdding: .day, value: 1, to: dia) ?? dia
+        }
+        return data
+    }
+
+    static func ordenacao(_ a: Atividade, _ b: Atividade) -> Bool {
+        if a.aberta != b.aberta { return a.aberta }
+        switch (a.data, b.data) {
+        case let (da?, db?) where da != db:
+            let ca = Calendar.current.startOfDay(for: da)
+            let cb = Calendar.current.startOfDay(for: db)
+            if ca != cb { return ca < cb }
+            // no mesmo dia: com horário primeiro, por hora
+            if a.temHorario != b.temHorario { return a.temHorario }
+            if da != db { return da < db }
         case (.some, .none): return true
         case (.none, .some): return false
         default: break
@@ -300,7 +374,7 @@ final class Etapa {
     var titulo: String = ""
     var feita: Bool = false
     var ordem: Int = 0
-    var tarefa: Tarefa?
+    var atividade: Atividade?
 
     init(titulo: String, feita: Bool = false, ordem: Int = 0) {
         self.titulo = titulo
@@ -309,44 +383,55 @@ final class Etapa {
     }
 }
 
-@Model
-final class Compromisso {
-    var uid: UUID = UUID()
-    var titulo: String = ""
-    var inicio: Date = Date()
-    var fim: Date = Date().addingTimeInterval(3600)
-    var tipoRaw: String = TipoCompromisso.reuniao.rawValue
-    var frenteRaw: String = Frente.chinaLink.rawValue
-    var local: String = ""
-    var link: String = ""
-    var notas: String = ""
-    /// Minutos antes do início para lembrar. -1 = sem lembrete.
-    var lembreteMinutos: Int = 15
-    var cliente: Cliente?
+// MARK: - Ações
 
-    init(titulo: String = "", inicio: Date = Date()) {
-        self.titulo = titulo
-        self.inicio = inicio
-        self.fim = inicio.addingTimeInterval(3600)
+enum Acoes {
+    /// Conclui (ou reabre) uma tarefa. Se ela se repete, cria a próxima.
+    static func alternarConclusao(_ a: Atividade, context: ModelContext) {
+        if a.status == .concluida {
+            a.status = .aberta
+            a.concluidaEm = nil
+            Notificacoes.atualizar(a)
+            return
+        }
+        a.status = .concluida
+        a.concluidaEm = Date()
+        Notificacoes.atualizar(a)
+
+        if !a.ehCompromisso, a.repeticao != .nunca, let data = a.data,
+           let proxima = a.repeticao.proxima(depois: data) {
+            let nova = Atividade(tipo: a.tipo, titulo: a.titulo)
+            nova.descricao = a.descricao
+            nova.contexto = a.contexto
+            nova.prioridade = a.prioridade
+            nova.data = proxima
+            nova.temHorario = a.temHorario
+            nova.repeticao = a.repeticao
+            nova.lembretes = a.lembretes
+            nova.local = a.local
+            nova.link = a.link
+            nova.trabalho = a.trabalho
+            nova.cliente = a.cliente
+            context.insert(nova)
+            for (i, e) in a.etapasOrdenadas.enumerated() {
+                let etapa = Etapa(titulo: e.titulo, feita: false, ordem: i)
+                context.insert(etapa)
+                etapa.atividade = nova
+            }
+            // a concluída deixa de repetir; quem repete agora é a nova
+            a.repeticao = .nunca
+            Notificacoes.atualizar(nova)
+        }
     }
 
-    var tipo: TipoCompromisso {
-        get { TipoCompromisso(rawValue: tipoRaw) ?? .reuniao }
-        set { tipoRaw = newValue.rawValue }
+    static func cancelar(_ a: Atividade) {
+        a.status = a.status == .cancelada ? .aberta : .cancelada
+        a.concluidaEm = nil
+        Notificacoes.atualizar(a)
     }
 
-    var frente: Frente {
-        get { Frente(rawValue: frenteRaw) ?? .chinaLink }
-        set { frenteRaw = newValue.rawValue }
+    static func apagar(_ a: Atividade, context: ModelContext) {
+        Notificacoes.cancelar(a)
+        context.delete(a)
     }
-
-    var url: URL? {
-        let texto = link.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !texto.isEmpty else { return nil }
-        if texto.lowercased().hasPrefix("http") { return URL(string: texto) }
-        return URL(string: "https://\(texto)")
-    }
-
-    var jaPassou: Bool { fim < Date() }
-    var acontecendoAgora: Bool { inicio <= Date() && fim >= Date() }
 }
