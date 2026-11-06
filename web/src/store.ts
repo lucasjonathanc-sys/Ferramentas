@@ -1,7 +1,7 @@
 // Estado do app, salvo no próprio iPhone (localStorage).
 import { useSyncExternalStore } from 'react'
 import {
-  type Atividade, type Cliente, aberta, dataDe, ehCompromisso, novoId, proximaData,
+  type Atividade, type Cliente, aberta, dataDe, ehCompromisso, normalizarCliente, novoId, proximaData,
 } from './modelo'
 
 const CHAVE = 'hb-organiza-v1'
@@ -21,7 +21,7 @@ function carregar(): Estado {
     const dados = JSON.parse(bruto)
     return {
       atividades: Array.isArray(dados.atividades) ? dados.atividades : [],
-      clientes: Array.isArray(dados.clientes) ? dados.clientes : [],
+      clientes: Array.isArray(dados.clientes) ? dados.clientes.map(normalizarCliente) : [],
       nome: typeof dados.nome === 'string' ? dados.nome : 'Hanna',
     }
   } catch {
@@ -165,11 +165,19 @@ export function importarBackup(texto: string): boolean {
     if (!Array.isArray(dados.atividades) || !Array.isArray(dados.clientes)) return false
     definir({
       atividades: dados.atividades,
-      clientes: dados.clientes,
+      clientes: dados.clientes.map(normalizarCliente),
       nome: typeof dados.nome === 'string' ? dados.nome : estado.nome,
     })
     return true
   } catch {
     return false
   }
+}
+
+/** Marca ou desmarca um mês (yyyy-mm) como pago. */
+export function alternarPagamento(clienteId: string, mes: string) {
+  const c = estado.clientes.find((x) => x.id === clienteId)
+  if (!c) return
+  const pagamentos = c.pagamentos.includes(mes) ? c.pagamentos.filter((m) => m !== mes) : [...c.pagamentos, mes]
+  salvarCliente({ ...c, pagamentos })
 }

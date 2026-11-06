@@ -306,3 +306,20 @@ input::placeholder, textarea::placeholder { color: var(--texto2); }
   display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px;
   background: var(--vinho-suave); font-size: 14px; line-height: 1.4;
 }
+
+/* MARK: CRM de clientes */
+
+.atalhos { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.atalhos::-webkit-scrollbar { display: none; }
+.atalho { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; color: var(--texto2); text-decoration: none; flex-shrink: 0; min-width: 52px; }
+.atalho-icone { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.dados { display: flex; flex-direction: column; gap: 10px; }
+.dado { display: grid; grid-template-columns: 96px 1fr; gap: 10px; font-size: 14px; line-height: 1.35; }
+.dado-rotulo { color: var(--texto2); }
+.dado-valor { white-space: pre-wrap; overflow-wrap: anywhere; }
+.link-dado { color: var(--vinho); text-decoration: none; }
+.cartao-cliente { padding: 14px; }
+.campo-rotulado { align-items: flex-start; }
+.campo-rotulado .campo-nome { width: 112px; flex-shrink: 0; color: var(--texto2); font-size: 15px; padding-top: 1px; }
+.campo-rotulado input, .campo-rotulado textarea { font-size: 16px; }
+.campo-rotulado textarea { min-height: 44px; }

@@ -74,13 +74,75 @@ export interface Cliente {
   id: string
   nome: string
   nicho: string
-  instagram: string
-  contato: string
-  valorMensal: number
   cor: string
-  observacoes: string
   ativo: boolean
   criadoEm: string
+
+  // Contato
+  responsavel: string
+  /** WhatsApp / telefone */
+  contato: string
+  email: string
+  instagram: string
+  tiktok: string
+  site: string
+  endereco: string
+
+  // Contrato e pagamento
+  servicos: string
+  valorMensal: number
+  /** Dia do mês em que o cliente paga (1–31), ou null. */
+  diaPagamento: number | null
+  /** Início do contrato (yyyy-mm-dd), ou ''. */
+  inicioContrato: string
+  /** Meses já pagos, no formato yyyy-mm. */
+  pagamentos: string[]
+
+  // Identidade da marca
+  cores: string
+  fontes: string
+  tomDeVoz: string
+  publicoAlvo: string
+  diasPostagem: string
+  linkDrive: string
+  linkCanva: string
+  linkFotos: string
+
+  observacoes: string
+}
+
+/** Completa clientes salvos em versões antigas com os campos novos. */
+export function normalizarCliente(c: Partial<Cliente>): Cliente {
+  const texto = (v: unknown) => (typeof v === 'string' ? v : '')
+  return {
+    id: c.id ?? novoId(),
+    nome: texto(c.nome),
+    nicho: texto(c.nicho),
+    cor: texto(c.cor) || '#82766B',
+    ativo: c.ativo !== false,
+    criadoEm: texto(c.criadoEm) || new Date().toISOString(),
+    responsavel: texto(c.responsavel),
+    contato: texto(c.contato),
+    email: texto(c.email),
+    instagram: texto(c.instagram),
+    tiktok: texto(c.tiktok),
+    site: texto(c.site),
+    endereco: texto(c.endereco),
+    servicos: texto(c.servicos),
+    valorMensal: typeof c.valorMensal === 'number' ? c.valorMensal : 0,
+    diaPagamento: typeof c.diaPagamento === 'number' ? c.diaPagamento : null,
+    inicioContrato: texto(c.inicioContrato),
+    pagamentos: Array.isArray(c.pagamentos) ? c.pagamentos.filter((x): x is string => typeof x === 'string') : [],
+    cores: texto(c.cores),
+    fontes: texto(c.fontes),
+    tomDeVoz: texto(c.tomDeVoz),
+    publicoAlvo: texto(c.publicoAlvo),
+    diasPostagem: texto(c.diasPostagem),
+    linkDrive: texto(c.linkDrive),
+    linkCanva: texto(c.linkCanva),
+    linkFotos: texto(c.linkFotos),
+    observacoes: texto(c.observacoes),
+  }
 }
 
 export const novoId = () =>

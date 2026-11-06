@@ -1,26 +1,12 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useApp } from '../contexto'
-import { useEstado, salvarCliente, apagarCliente } from '../store'
+import { useEstado, salvarCliente, apagarCliente, alternarPagamento } from '../store'
 import { Cabecalho, EstadoVazio, Folha, Icone, ListaAtividades, Segmento, TituloSecao } from '../componentes/Base'
-import { type Cliente, PALETA_CLIENTES, aberta, atrasada, dataDe, jaPassou, novoId, ordenacao } from '../modelo'
-import { dinheiro, quando } from '../datas'
+import { AvatarCliente, BotoesCliente, LinhaDado } from '../componentes/Cliente'
+import { type Cliente, PALETA_CLIENTES, aberta, atrasada, dataDe, jaPassou, normalizarCliente, ordenacao } from '../modelo'
+import { corSituacao, formatarTelefone, mesAtual, situacaoPagamento } from '../cliente'
+import { deInputData, dinheiro, quando } from '../datas'
 
-const iniciais = (nome: string) =>
-  nome.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || '?'
-
-export function AvatarCliente({ cliente, tamanho = 46 }: { cliente: Pick<Cliente, 'nome' | 'cor'>; tamanho?: number }) {
-  return (
-    <span
-      className="avatar-cliente"
-      style={{
-        width: tamanho, height: tamanho, fontSize: tamanho * 0.38,
-        color: cliente.cor, background: `color-mix(in srgb, ${cliente.cor} 15%, transparent)`,
-      }}
-    >
-      {iniciais(cliente.nome)}
-    </span>
-  )
-}
 
 export function Clientes() {
   const app = useApp()
@@ -35,10 +21,13 @@ export function Clientes() {
   const ativos = clientes.filter((c) => c.ativo)
   const arquivados = clientes.filter((c) => !c.ativo)
   const termo = busca.trim().toLocaleLowerCase('pt-BR')
+  const casa = (c: Cliente) =>
+    [c.nome, c.nicho, c.responsavel, c.instagram].some((v) => v.toLocaleLowerCase('pt-BR').includes(termo))
   const visiveis = (grupo === 'ativos' ? ativos : arquivados)
-    .filter((c) => !termo || c.nome.toLocaleLowerCase('pt-BR').includes(termo) || c.nicho.toLocaleLowerCase('pt-BR').includes(termo))
+    .filter((c) => !termo || casa(c))
     .sort((a, b) => a.nome.localeCompare(b.nome))
   const receita = ativos.reduce((s, c) => s + (c.valorMensal || 0), 0)
+  const recebido = ativos.filter((c) => c.pagamentos.includes(mesAtual())).reduce((s, c) => s + (c.valorMensal || 0), 0)
 
   return (
     <div className="conteudo">
@@ -59,35 +48,45 @@ export function Clientes() {
         />
 
         {grupo === 'ativos' && receita > 0 && (
-          <div className="card linha">
-            <span className="medio texto2">Renda extra mensal</span>
-            <span className="espaco" />
-            <span style={{ fontFamily: 'var(--titulo)', fontSize: 21 }}>{dinheiro(receita)}</span>
+          <div className="card">
+            <div className="linha">
+              <span className="medio texto2">Renda extra mensal</span>
+              <span className="espaco" />
+              <span style={{ fontFamily: 'var(--titulo)', fontSize: 21 }}>{dinheiro(receita)}</span>
+            </div>
+            <div className="progresso"><div style={{ width: `${(recebido / receita) * 100}%`, background: 'var(--sucesso)' }} /></div>
+            <div className="pequeno texto2" style={{ marginTop: 6 }}>{dinheiro(recebido)} recebido este mês</div>
           </div>
         )}
 
         {visiveis.length === 0 ? (
           busca ? <EstadoVazio titulo="Nenhum cliente encontrado" />
             : grupo === 'ativos'
-              ? <EstadoVazio titulo="Nenhum cliente cadastrado" botao="Novo cliente" onClick={() => app.abrir({ tipo: 'cliente' })} />
+              ? <EstadoVazio titulo="Nenhum cliente cadastrado" texto="Cadastre o perfil de cada cliente uma vez e puxe os dados nas tarefas e compromissos." botao="Novo cliente" onClick={() => app.abrir({ tipo: 'cliente' })} />
               : <EstadoVazio titulo="Nenhum cliente arquivado" texto="Clientes que você pausar ou encerrar ficam guardados aqui." />
         ) : (
           <div className="pilha-p">
             {visiveis.map((c) => {
-              const abertas = atividades.filter((a) => a.clienteId === c.id && aberta(a)).sort(ordenacao)
+              const abertas = atividades.filter((a) => a.clienteId === c.id && aberta(a) && !jaPassou(a)).sort(ordenacao)
               const proxima = abertas.find((a) => a.data)
+              const situacao = c.ativo ? situacaoPagamento(c) : null
               return (
                 <button key={c.id} className="card linha" style={{ padding: 14, gap: 14, textAlign: 'left' }} onClick={() => setAbertoId(c.id)}>
                   <AvatarCliente cliente={c} />
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontWeight: 500 }}>{c.nome}</span>
-                    {c.nicho && <span className="medio texto2" style={{ display: 'block' }}>{c.nicho}</span>}
-                    <span className="pequeno texto2">
+                    {(c.nicho || c.responsavel) && (
+                      <span className="medio texto2" style={{ display: 'block' }}>{[c.nicho, c.responsavel].filter(Boolean).join(' · ')}</span>
+                    )}
+                    <span className="pequeno texto2" style={{ display: 'block' }}>
                       {abertas.length ? `${abertas.length} em aberto` : 'Tudo em dia'}
                       {proxima && (
                         <> · <span style={atrasada(proxima) ? { color: 'var(--alerta)' } : undefined}>{quando(dataDe(proxima)!, proxima.temHorario)}</span></>
                       )}
                     </span>
+                    {situacao && situacao.tipo !== 'pendente' && (
+                      <span className="pequeno" style={{ display: 'block', color: corSituacao(situacao) }}>● {situacao.texto}</span>
+                    )}
                   </span>
                   <span style={{ color: 'var(--vinho)' }}><Icone nome="seta" tamanho={18} peso={1.3} /></span>
                 </button>
@@ -100,18 +99,35 @@ export function Clientes() {
   )
 }
 
-function ClienteDetalhe({ cliente, voltar }: { cliente: Cliente; voltar: () => void }) {
+// MARK: - Perfil do cliente
+
+function Secao({ titulo, dados, children }: { titulo: string; dados: [string, ReactNode][]; children?: ReactNode }) {
+  const preenchidos = dados.filter(([, v]) => v !== '' && v !== null && v !== undefined)
+  if (!preenchidos.length && !children) return null
+  return (
+    <div className="pilha-p">
+      <TituloSecao titulo={titulo} />
+      <div className="card">
+        {preenchidos.length > 0 && <div className="dados">{preenchidos.map(([r, v]) => <LinhaDado key={r} rotulo={r}>{v}</LinhaDado>)}</div>}
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ClienteDetalhe({ cliente: c, voltar }: { cliente: Cliente; voltar: () => void }) {
   const app = useApp()
   const { atividades } = useEstado()
   const [todas, setTodas] = useState(false)
 
   const itens = atividades
-    .filter((a) => a.clienteId === cliente.id && (todas || (aberta(a) && !jaPassou(a))))
+    .filter((a) => a.clienteId === c.id && (todas || (aberta(a) && !jaPassou(a))))
     .sort(ordenacao)
 
-  const digitos = cliente.contato.replace(/\D/g, '')
-  const whats = digitos.length >= 10 ? `https://wa.me/${digitos.length <= 11 ? '55' + digitos : digitos}` : null
-  const insta = cliente.instagram.trim().replace('@', '')
+  const situacao = situacaoPagamento(c)
+  const pagoEsteMes = c.pagamentos.includes(mesAtual())
+  const inicio = c.inicioContrato ? deInputData(c.inicioContrato).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const link = (url: string) => (url ? <a href={/^https?:/i.test(url) ? url : `https://${url}`} target="_blank" rel="noreferrer" className="link-dado">{url.replace(/^https?:\/\/(www\.)?/i, '')}</a> : '')
 
   return (
     <div className="conteudo">
@@ -119,41 +135,38 @@ function ClienteDetalhe({ cliente, voltar }: { cliente: Cliente; voltar: () => v
         <div className="linha">
           <button className="voltar" onClick={voltar}><Icone nome="voltar" tamanho={18} /> Clientes</button>
           <span className="espaco" />
-          <button className="medio" onClick={() => app.abrir({ tipo: 'cliente', id: cliente.id })}>Editar</button>
+          <button className="medio" onClick={() => app.abrir({ tipo: 'cliente', id: c.id })}>Editar</button>
         </div>
 
-        <div className="pilha-p">
+        <div className="pilha-p" style={{ gap: 14 }}>
           <div className="linha" style={{ gap: 14 }}>
-            <AvatarCliente cliente={cliente} tamanho={60} />
-            <div>
-              <h1 className="titulo-pagina" style={{ fontSize: 28 }}>{cliente.nome}</h1>
-              {cliente.nicho && <div className="texto2">{cliente.nicho}</div>}
-              {!cliente.ativo && <div className="pequeno texto2">Arquivado</div>}
+            <AvatarCliente cliente={c} tamanho={60} />
+            <div style={{ minWidth: 0 }}>
+              <h1 className="titulo-pagina" style={{ fontSize: 28 }}>{c.nome}</h1>
+              {(c.nicho || c.responsavel) && <div className="texto2">{[c.nicho, c.responsavel].filter(Boolean).join(' · ')}</div>}
+              {!c.ativo && <div className="pequeno texto2">Arquivado</div>}
             </div>
           </div>
-          <div className="fluxo">
-            {insta && (
-              <a className="tag" href={`https://instagram.com/${insta}`} target="_blank" rel="noreferrer"
-                style={{ color: cliente.cor, background: `color-mix(in srgb, ${cliente.cor} 12%, transparent)` }}>
-                <Icone nome="camera" tamanho={13} /> @{insta}
-              </a>
-            )}
-            {whats && (
-              <a className="tag" href={whats} target="_blank" rel="noreferrer"
-                style={{ color: 'var(--sucesso)', background: 'color-mix(in srgb, var(--sucesso) 12%, transparent)' }}>
-                <Icone nome="mensagem" tamanho={13} /> WhatsApp
-              </a>
-            )}
-            {cliente.valorMensal > 0 && (
-              <span className="tag" style={{ color: 'var(--texto2)', background: 'var(--suave)' }}>
-                <Icone nome="dinheiro" tamanho={13} /> {dinheiro(cliente.valorMensal)}/mês
-              </span>
-            )}
-          </div>
+          <BotoesCliente cliente={c} />
         </div>
 
-        <button className="pilula largo" onClick={() => app.abrir({ tipo: 'nova', atividadeTipo: 'tarefa', clienteId: cliente.id })}>
-          Nova atividade para {cliente.nome}
+        {c.valorMensal > 0 && (
+          <div className="card">
+            <div className="linha" style={{ alignItems: 'baseline' }}>
+              <span style={{ fontFamily: 'var(--titulo)', fontSize: 22 }}>{dinheiro(c.valorMensal)}</span>
+              <span className="texto2 medio">/mês</span>
+              <span className="espaco" />
+              {c.diaPagamento && <span className="pequeno texto2">vence dia {c.diaPagamento}</span>}
+            </div>
+            {situacao && <div className="pequeno" style={{ color: corSituacao(situacao), marginTop: 6 }}>● {situacao.texto}</div>}
+            <button className={`pilula ${pagoEsteMes ? 'contorno' : ''}`} style={{ width: '100%', marginTop: 12 }} onClick={() => alternarPagamento(c.id, mesAtual())}>
+              {pagoEsteMes ? 'Desmarcar pagamento deste mês' : 'Marcar este mês como pago'}
+            </button>
+          </div>
+        )}
+
+        <button className="pilula largo" onClick={() => app.abrir({ tipo: 'nova', atividadeTipo: 'tarefa', clienteId: c.id })}>
+          Nova atividade para {c.nome}
           <Icone nome="seta" tamanho={16} peso={1.3} />
         </button>
 
@@ -167,10 +180,22 @@ function ClienteDetalhe({ cliente, voltar }: { cliente: Cliente; voltar: () => v
             : <ListaAtividades itens={itens} />}
         </div>
 
-        {cliente.observacoes && (
+        <Secao titulo="Contato" dados={[
+          ['Responsável', c.responsavel], ['WhatsApp', formatarTelefone(c.contato)], ['E-mail', c.email],
+          ['Instagram', c.instagram], ['TikTok', c.tiktok], ['Site', link(c.site)], ['Endereço', c.endereco],
+        ]} />
+        <Secao titulo="Contrato" dados={[
+          ['Serviços', c.servicos], ['Valor', c.valorMensal ? `${dinheiro(c.valorMensal)} por mês` : ''],
+          ['Pagamento', c.diaPagamento ? `Todo dia ${c.diaPagamento}` : ''], ['Início', inicio],
+        ]} />
+        <Secao titulo="Identidade da marca" dados={[
+          ['Cores', c.cores], ['Fontes', c.fontes], ['Tom de voz', c.tomDeVoz], ['Público-alvo', c.publicoAlvo],
+          ['Postagens', c.diasPostagem], ['Drive', link(c.linkDrive)], ['Canva', link(c.linkCanva)], ['Fotos', link(c.linkFotos)],
+        ]} />
+        {c.observacoes && (
           <div className="pilha-p">
             <TituloSecao titulo="Observações" />
-            <div className="card medio" style={{ whiteSpace: 'pre-wrap' }}>{cliente.observacoes}</div>
+            <div className="card medio" style={{ whiteSpace: 'pre-wrap' }}>{c.observacoes}</div>
           </div>
         )}
       </div>
@@ -178,32 +203,62 @@ function ClienteDetalhe({ cliente, voltar }: { cliente: Cliente; voltar: () => v
   )
 }
 
-export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: () => void }) {
-  const [nome, setNome] = useState(cliente?.nome ?? '')
-  const [nicho, setNicho] = useState(cliente?.nicho ?? '')
-  const [instagram, setInstagram] = useState(cliente?.instagram ?? '')
-  const [contato, setContato] = useState(cliente?.contato ?? '')
-  const [valor, setValor] = useState(cliente?.valorMensal ? String(cliente.valorMensal).replace('.', ',') : '')
-  const [cor, setCor] = useState(cliente?.cor ?? PALETA_CLIENTES[Math.floor(Math.random() * PALETA_CLIENTES.length)])
-  const [observacoes, setObservacoes] = useState(cliente?.observacoes ?? '')
-  const [arquivado, setArquivado] = useState(cliente ? !cliente.ativo : false)
+// MARK: - Cadastro / edição
 
-  const podeSalvar = nome.trim().length > 0
+function Campo(props: {
+  rotulo: string
+  valor: string
+  definir: (v: string) => void
+  placeholder?: string
+  tipo?: 'text' | 'email' | 'tel' | 'url' | 'date' | 'number'
+  modo?: 'text' | 'email' | 'tel' | 'url' | 'decimal' | 'numeric'
+  multilinha?: boolean
+}) {
+  return (
+    <label className="grupo-linha campo-rotulado">
+      <span className="campo-nome">{props.rotulo}</span>
+      {props.multilinha ? (
+        <textarea value={props.valor} onChange={(e) => props.definir(e.target.value)} placeholder={props.placeholder} rows={2} />
+      ) : (
+        <input
+          type={props.tipo ?? 'text'}
+          value={props.valor}
+          onChange={(e) => props.definir(e.target.value)}
+          placeholder={props.placeholder}
+          inputMode={props.modo}
+          autoCapitalize={props.tipo === 'email' || props.tipo === 'url' || props.modo === 'url' ? 'off' : undefined}
+          autoCorrect={props.tipo === 'email' || props.tipo === 'url' || props.modo === 'url' ? 'off' : undefined}
+        />
+      )}
+    </label>
+  )
+}
+
+export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: () => void }) {
+  const [f, setF] = useState<Cliente>(() =>
+    cliente ?? normalizarCliente({ cor: PALETA_CLIENTES[Math.floor(Math.random() * PALETA_CLIENTES.length)] }),
+  )
+  const [valor, setValor] = useState(cliente?.valorMensal ? String(cliente.valorMensal).replace('.', ',') : '')
+  const [dia, setDia] = useState(cliente?.diaPagamento ? String(cliente.diaPagamento) : '')
+
+  const campo = (k: keyof Cliente) => ({
+    valor: String(f[k] ?? ''),
+    definir: (v: string) => setF((x) => ({ ...x, [k]: v })),
+  })
+  const podeSalvar = f.nome.trim().length > 0
 
   function salvar() {
     if (!podeSalvar) return
     const numero = Number(valor.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0
+    const d = Math.round(Number(dia))
     salvarCliente({
-      id: cliente?.id ?? novoId(),
-      nome: nome.trim(),
-      nicho,
-      instagram: instagram.trim(),
-      contato,
+      ...f,
+      nome: f.nome.trim(),
+      instagram: f.instagram.trim(),
+      tiktok: f.tiktok.trim(),
+      email: f.email.trim(),
       valorMensal: numero,
-      cor,
-      observacoes,
-      ativo: !arquivado,
-      criadoEm: cliente?.criadoEm ?? new Date().toISOString(),
+      diaPagamento: d >= 1 && d <= 31 ? d : null,
     })
     fechar()
   }
@@ -220,35 +275,61 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
       }
     >
       <div style={{ display: 'grid', placeItems: 'center' }}>
-        <AvatarCliente cliente={{ nome: nome || '?', cor }} tamanho={80} />
+        <AvatarCliente cliente={{ nome: f.nome || '?', cor: f.cor }} tamanho={80} />
       </div>
       <div className="grupo">
         <div className="cores">
           {PALETA_CLIENTES.map((c) => (
-            <button key={c} style={{ background: c }} onClick={() => setCor(c)} aria-label={`Cor ${c}`}>
-              {c === cor && <Icone nome="check" tamanho={14} peso={2.4} />}
+            <button key={c} style={{ background: c }} onClick={() => setF({ ...f, cor: c })} aria-label={`Cor ${c}`}>
+              {c === f.cor && <Icone nome="check" tamanho={14} peso={2.4} />}
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <p className="grupo-titulo">Dados</p>
+        <p className="grupo-titulo">Empresa</p>
         <div className="grupo">
-          <label className="grupo-linha"><input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da empresa" autoFocus={!cliente} /></label>
-          <label className="grupo-linha"><input value={nicho} onChange={(e) => setNicho(e.target.value)} placeholder="Nicho (ex.: confeitaria, salão)" /></label>
-          <label className="grupo-linha"><input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@instagram" autoCapitalize="off" autoCorrect="off" /></label>
-          <label className="grupo-linha"><input value={contato} onChange={(e) => setContato(e.target.value)} placeholder="WhatsApp / contato" inputMode="tel" /></label>
+          <Campo rotulo="Nome" {...campo('nome')} placeholder="Nome da empresa" />
+          <Campo rotulo="Nicho" {...campo('nicho')} placeholder="Ex.: confeitaria, salão" />
         </div>
       </div>
 
       <div>
-        <p className="grupo-titulo">Financeiro</p>
+        <p className="grupo-titulo">Contato</p>
         <div className="grupo">
-          <label className="grupo-linha">
-            <span>Valor mensal</span>
-            <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="R$ 0,00" inputMode="decimal" style={{ textAlign: 'right' }} />
-          </label>
+          <Campo rotulo="Responsável" {...campo('responsavel')} placeholder="Com quem você fala" />
+          <Campo rotulo="WhatsApp" {...campo('contato')} placeholder="(11) 99999-9999" tipo="tel" modo="tel" />
+          <Campo rotulo="E-mail" {...campo('email')} placeholder="contato@empresa.com" tipo="email" modo="email" />
+          <Campo rotulo="Instagram" {...campo('instagram')} placeholder="@perfil" modo="url" />
+          <Campo rotulo="TikTok" {...campo('tiktok')} placeholder="@perfil" modo="url" />
+          <Campo rotulo="Site" {...campo('site')} placeholder="empresa.com.br" modo="url" />
+          <Campo rotulo="Endereço" {...campo('endereco')} placeholder="Rua, número, bairro, cidade" multilinha />
+        </div>
+        <p className="grupo-nota">O endereço já entra no Local quando você cria um compromisso com este cliente.</p>
+      </div>
+
+      <div>
+        <p className="grupo-titulo">Contrato e pagamento</p>
+        <div className="grupo">
+          <Campo rotulo="Serviços" {...campo('servicos')} placeholder="Ex.: 12 posts e 4 vídeos por mês" multilinha />
+          <Campo rotulo="Valor mensal" valor={valor} definir={setValor} placeholder="R$ 0,00" modo="decimal" />
+          <Campo rotulo="Dia de pagamento" valor={dia} definir={setDia} placeholder="Ex.: 10" modo="numeric" />
+          <Campo rotulo="Início do contrato" {...campo('inicioContrato')} tipo="date" />
+        </div>
+      </div>
+
+      <div>
+        <p className="grupo-titulo">Identidade da marca</p>
+        <div className="grupo">
+          <Campo rotulo="Cores" {...campo('cores')} placeholder="Ex.: rosa #F4A6B8, marrom" />
+          <Campo rotulo="Fontes" {...campo('fontes')} placeholder="Ex.: Playfair e Montserrat" />
+          <Campo rotulo="Tom de voz" {...campo('tomDeVoz')} placeholder="Ex.: leve, divertido, próximo" multilinha />
+          <Campo rotulo="Público-alvo" {...campo('publicoAlvo')} placeholder="Ex.: mulheres de 25 a 40 anos" multilinha />
+          <Campo rotulo="Postagens" {...campo('diasPostagem')} placeholder="Ex.: ter e qui às 18h" />
+          <Campo rotulo="Drive" {...campo('linkDrive')} placeholder="Link da pasta" modo="url" />
+          <Campo rotulo="Canva" {...campo('linkCanva')} placeholder="Link do Canva" modo="url" />
+          <Campo rotulo="Fotos" {...campo('linkFotos')} placeholder="Link das fotos" modo="url" />
         </div>
       </div>
 
@@ -256,7 +337,7 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
         <p className="grupo-titulo">Observações</p>
         <div className="grupo">
           <label className="grupo-linha">
-            <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Identidade visual, tom de voz, dias de postagem..." />
+            <textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} placeholder="Anotações gerais sobre o cliente" />
           </label>
         </div>
       </div>
@@ -266,7 +347,7 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
           <div className="grupo">
             <label className="grupo-linha">
               <span style={{ flex: 1 }}>Arquivar cliente</span>
-              <input type="checkbox" checked={arquivado} onChange={(e) => setArquivado(e.target.checked)} style={{ flex: 'none', width: 22, height: 22, accentColor: 'var(--vinho)' }} />
+              <input type="checkbox" checked={!f.ativo} onChange={(e) => setF({ ...f, ativo: !e.target.checked })} style={{ flex: 'none', width: 22, height: 22, accentColor: 'var(--vinho)' }} />
             </label>
             <button
               className="grupo-linha link-perigo"

@@ -7,6 +7,7 @@ import {
 } from '../modelo'
 import { deInputData, deInputHora, paraInputData, paraInputHora } from '../datas'
 import { abrirNoCalendario } from '../ics'
+import { CartaoCliente } from '../componentes/Cliente'
 
 interface Props {
   fechar: () => void
@@ -25,6 +26,7 @@ function proximaHoraCheia(dia: Date): Date {
 
 export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
   const { clientes } = useEstado()
+  const enderecoDe = (id: string | null | undefined) => clientes.find((c) => c.id === id)?.endereco.trim() ?? ''
   const editando = !!atividade
 
   // Estado inicial
@@ -69,7 +71,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       prioridade: 1 as Prioridade,
       repeticao: 'nunca' as Repeticao,
       lembretes: [15],
-      local: '',
+      local: tipo === 'compromisso' ? enderecoDe(pedido?.clienteId) : '',
       link: '',
       maisOpcoes: false,
     }
@@ -94,11 +96,13 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
 
   const ehCompromisso = tipo === 'compromisso'
   const podeSalvar = titulo.trim().length > 0
+  const cliente = clientes.find((c) => c.id === clienteId)
   const clientesVisiveis = clientes.filter((c) => c.ativo || c.id === clienteId).sort((a, b) => a.nome.localeCompare(b.nome))
 
   function mudarTipo(t: Tipo) {
     setTipo(t)
     if (t === 'compromisso') {
+      if (!local.trim() && cliente?.endereco.trim()) setLocal(cliente.endereco.trim())
       setTemData(true)
       if (!temHorario) {
         setTemHorario(true)
@@ -276,6 +280,8 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
             value={clienteId ?? ''}
             onChange={(e) => {
               const id = e.target.value || null
+              // Nos compromissos, o endereço do cliente entra no Local (se estiver vazio ou com o endereço do cliente anterior)
+              if (ehCompromisso && (!local.trim() || local.trim() === enderecoDe(clienteId))) setLocal(enderecoDe(id))
               setClienteId(id)
               if (id) setContexto('Clientes')
             }}
@@ -285,6 +291,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
           </select>
           <span className="texto2"><Icone nome="setas" tamanho={14} /></span>
         </label>
+        {cliente && <div style={{ marginTop: 10 }}><CartaoCliente cliente={cliente} /></div>}
       </div>
 
       <div className="pilha-p">
