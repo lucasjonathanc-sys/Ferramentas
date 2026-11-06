@@ -15,13 +15,13 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
 
   async function salvarBackup() {
     const texto = exportarBackup()
-    const nome = `hb-organiza-backup-${paraInputData(new Date())}.json`
+    const nome = `db-organiza-backup-${paraInputData(new Date())}.json`
     const arquivo = new File([texto], nome, { type: 'application/json' })
     // No iPhone abre a folha de compartilhar (Salvar em Arquivos, iCloud Drive, AirDrop...)
     const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean }
     if (nav.canShare?.({ files: [arquivo] })) {
       try {
-        await navigator.share({ files: [arquivo], title: 'Backup HB Organiza' })
+        await navigator.share({ files: [arquivo], title: 'Backup DB. Organiza' })
         setMensagem('Backup pronto.')
         return
       } catch {
@@ -42,7 +42,7 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
     if (!f) return
     const texto = await f.text()
     if (!confirm('Restaurar este backup? O que está no app agora será substituído.')) return
-    setMensagem(importarBackup(texto) ? 'Backup restaurado.' : 'Esse arquivo não é um backup válido do HB Organiza.')
+    setMensagem(importarBackup(texto) ? 'Backup restaurado.' : 'Esse arquivo não é um backup válido do DB. Organiza.')
   }
 
   return (
@@ -52,7 +52,7 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
           <Logo tamanho={30} />
         </span>
         <div>
-          <div style={{ fontFamily: 'var(--titulo)', fontSize: 18 }}>HB Organiza</div>
+          <div style={{ fontFamily: 'var(--titulo)', fontSize: 18 }}>DB. Organiza</div>
           <div className="pequeno texto2">Feito com carinho para a {estado.nome.trim() || 'Hanna'} 🤍</div>
         </div>
       </div>

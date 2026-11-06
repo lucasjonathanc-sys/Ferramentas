@@ -17,7 +17,7 @@ export function AvisoInstalar() {
       <span style={{ color: 'var(--vinho)', marginTop: 2 }}><Icone nome="compartilhar" tamanho={20} /></span>
       <div style={{ flex: 1 }}>
         <b>Instale como app:</b> no Safari, toque em <b>Compartilhar</b> e depois em{' '}
-        <b>“Adicionar à Tela de Início”</b>. O HB Organiza aparece com ícone próprio e abre em tela cheia.
+        <b>“Adicionar à Tela de Início”</b>. O DB. Organiza aparece com ícone próprio e abre em tela cheia.
       </div>
       <button
         onClick={() => { localStorage.setItem(CHAVE, '1'); setFechado(true) }}

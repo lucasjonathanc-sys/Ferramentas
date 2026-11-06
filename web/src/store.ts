@@ -156,7 +156,7 @@ export function definirNome(nome: string) {
 }
 
 export function exportarBackup(): string {
-  return JSON.stringify({ app: 'HB Organiza', versao: 1, exportadoEm: new Date().toISOString(), ...estado }, null, 2)
+  return JSON.stringify({ app: 'DB. Organiza', versao: 1, exportadoEm: new Date().toISOString(), ...estado }, null, 2)
 }
 
 /** Restaura um backup. Retorna false se o arquivo não for válido. */

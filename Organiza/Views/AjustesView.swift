@@ -33,7 +33,7 @@ struct AjustesView: View {
                             .frame(width: 56, height: 56)
                             .background(Theme.fundo, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("HB Organiza").font(Fonte.titulo(18))
+                            Text("DB. Organiza").font(Fonte.titulo(18))
                             Text("Feito com carinho para a \(nome.isEmpty ? "Hanna" : nome) 💜")
                                 .font(Fonte.texto(12))
                                 .foregroundStyle(.secondary)
