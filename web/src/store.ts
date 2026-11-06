@@ -92,6 +92,7 @@ export function alternarConclusao(id: string) {
       id: novoId(),
       status: 'aberta',
       etapa: 'aFazer',
+      checklist: a.checklist.map((i) => ({ ...i, id: novoId(), feito: false })),
       data: proxima.toISOString(),
       criadaEm: new Date().toISOString(),
       concluidaEm: null,
@@ -227,3 +228,45 @@ export function criarCartaoRapido(titulo: string, etapa: Exclude<ColunaQuadro, '
     checklist: [],
   })
 }
+
+// MARK: - Lembrete de backup
+
+const CHAVE_ULTIMO_BACKUP = 'hb-organiza-ultimo-backup'
+const CHAVE_PRIMEIRO_USO = 'hb-organiza-primeiro-uso'
+const CHAVE_ADIAR_BACKUP = 'hb-organiza-adiar-backup'
+const DIAS_SEM_BACKUP = 7
+
+const lerData = (chave: string) => {
+  try { const v = localStorage.getItem(chave); return v ? Number(v) : null } catch { return null }
+}
+const gravarData = (chave: string, quando: number) => {
+  try { localStorage.setItem(chave, String(quando)) } catch { /* ignora */ }
+}
+
+/** Marca o primeiro uso do app (para não pedir backup logo no começo). */
+export function registrarPrimeiroUso() {
+  if (lerData(CHAVE_PRIMEIRO_USO) === null) gravarData(CHAVE_PRIMEIRO_USO, Date.now())
+}
+
+export function registrarBackup() {
+  gravarData(CHAVE_ULTIMO_BACKUP, Date.now())
+  ouvintes.forEach((f) => f())
+}
+
+export function adiarLembreteBackup(dias = 3) {
+  gravarData(CHAVE_ADIAR_BACKUP, Date.now() + dias * 86400000)
+  ouvintes.forEach((f) => f())
+}
+
+/** Dias desde o último backup, se já passou do limite e há dados para proteger; senão null. */
+export function diasSemBackup(): number | null {
+  if (!estado.atividades.length && !estado.clientes.length) return null
+  const adiar = lerData(CHAVE_ADIAR_BACKUP)
+  if (adiar && Date.now() < adiar) return null
+  const base = lerData(CHAVE_ULTIMO_BACKUP) ?? lerData(CHAVE_PRIMEIRO_USO)
+  if (!base) return null
+  const dias = Math.floor((Date.now() - base) / 86400000)
+  return dias >= DIAS_SEM_BACKUP ? dias : null
+}
+
+export const jaFezBackup = () => lerData(CHAVE_ULTIMO_BACKUP) !== null

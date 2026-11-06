@@ -16,7 +16,8 @@ Existem duas versões, com as mesmas telas e a mesma identidade visual:
 - Os dados ficam salvos **só no iPhone**. Em **Ajustes → Salvar backup** dá para guardar uma cópia no app Arquivos ou no iCloud Drive.
 - Para receber os **lembretes com o app fechado**, abra a atividade e toque em **"Adicionar ao Calendário do iPhone"**. Os alarmes vão junto e quem avisa é o Calendário.
 - **Tarefas em Lista ou Quadro (estilo Trello):** colunas A fazer → Fazendo → Em aprovação → Feito. Para mover um cartão, segure e arraste, ou use o botão ⇄ "Mover para…".
-- **Checklist nos compromissos:** itens para marcar direto nos detalhes (ex.: "levar referências").
+- **Checklist em tarefas e compromissos:** itens para marcar direto nos detalhes (ex.: roteiro, arte, legenda).
+- **Tela Hoje:** mostra os pagamentos de clientes atrasados, de hoje e dos próximos 3 dias (com botão "Pago") e lembra de salvar backup se passar 7 dias sem.
 - **Clientes (CRM):** cada cliente tem um perfil com contato, contrato/pagamento e identidade da marca. Ao escolher o cliente numa tarefa ou compromisso, aparece o resumo do perfil com atalhos (WhatsApp, Instagram, Drive...), e nos compromissos o endereço já entra no Local.
 - Funciona sem internet depois da primeira abertura.
 

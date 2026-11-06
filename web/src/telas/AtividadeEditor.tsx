@@ -169,14 +169,14 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       criadaEm: atividade?.criadaEm ?? new Date().toISOString(),
       concluidaEm: atividade?.concluidaEm ?? null,
       etapa: inicial.etapa,
-      checklist: ehCompromisso ? checklist.filter((i) => i.texto.trim()) : (atividade?.checklist ?? []),
+      checklist: checklist.filter((i) => i.texto.trim()),
     }
   }
 
   function salvar() {
     if (!podeSalvar) return
     const a = montar()
-    if (ehCompromisso && novoItem.trim()) a.checklist = [...a.checklist, { id: novoId(), texto: novoItem.trim(), feito: false }]
+    if (novoItem.trim()) a.checklist = [...a.checklist, { id: novoId(), texto: novoItem.trim(), feito: false }]
     salvarAtividade(a)
     fechar()
   }
@@ -309,7 +309,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
         {cliente && <div style={{ marginTop: 10 }}><CartaoCliente cliente={cliente} /></div>}
       </div>
 
-      {ehCompromisso && (
+      {(
         <div>
           {rotulo('Checklist', true)}
           <div className="card checklist-editor">
@@ -343,7 +343,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
               }}
             >
               <span className="texto2" style={{ width: 22, display: 'grid', placeItems: 'center' }}><Icone nome="mais" tamanho={16} /></span>
-              <input value={novoItem} onChange={(e) => setNovoItem(e.target.value)} placeholder="Adicionar item (ex.: levar referências)" enterKeyHint="done" />
+              <input value={novoItem} onChange={(e) => setNovoItem(e.target.value)} placeholder={ehCompromisso ? 'Adicionar item (ex.: levar referências)' : 'Adicionar item (ex.: roteiro, arte, legenda)'} enterKeyHint="done" />
             </form>
           </div>
         </div>
