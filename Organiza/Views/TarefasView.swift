@@ -186,7 +186,7 @@ struct TarefasView: View {
                 } header: {
                     if !grupo.0.isEmpty {
                         Text(grupo.0)
-                            .font(.system(.subheadline, design: .serif))
+                            .font(Fonte.titulo(16))
                             .foregroundStyle(grupo.0 == "Atrasadas" ? Theme.alerta : Color.secondary)
                             .textCase(nil)
                     }

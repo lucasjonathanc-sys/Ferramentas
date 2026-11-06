@@ -69,7 +69,7 @@ struct HojeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    CabecalhoPagina(saudacao, subtitulo: Fmt.dataPorExtenso(Date()))
+                    CabecalhoPagina(saudacao, subtitulo: Fmt.dataPorExtenso(Date()), pincel: true)
 
                     if atividades.isEmpty {
                         EstadoVazio(
@@ -90,7 +90,7 @@ struct HojeView: View {
                         }
                         if semPrazo > 0 {
                             Text("\(semPrazo) tarefa\(semPrazo == 1 ? "" : "s") sem data na aba Tarefas")
-                                .font(.footnote)
+                                .font(Fonte.texto(13))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity)
                         }
@@ -112,10 +112,10 @@ struct HojeView: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(total == 0 ? "Sem tarefas para hoje" : "\(feitas) de \(total) feitas hoje")
-                    .font(.subheadline.weight(.medium))
+                    .font(Fonte.texto(15, .medio))
                 Spacer()
                 Text("\(compromissosHoje.count) compromisso\(compromissosHoje.count == 1 ? "" : "s")")
-                    .font(.subheadline)
+                    .font(Fonte.texto(15))
                     .foregroundStyle(.secondary)
             }
             GeometryReader { geo in
@@ -137,7 +137,7 @@ struct HojeView: View {
             if itens.isEmpty {
                 if let vazio {
                     Text(vazio)
-                        .font(.subheadline)
+                        .font(Fonte.texto(15))
                         .foregroundStyle(.secondary)
                         .card()
                 }

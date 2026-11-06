@@ -38,11 +38,11 @@ struct ClientesView: View {
                     if grupo == .ativos && receitaMensal > 0 {
                         HStack {
                             Text("Renda extra mensal")
-                                .font(.subheadline)
+                                .font(Fonte.texto(15))
                                 .foregroundStyle(.secondary)
                             Spacer()
                             Text(Fmt.dinheiro(receitaMensal))
-                                .font(.system(.title3, design: .serif))
+                                .font(Fonte.titulo(21))
                         }
                         .card()
                     }
@@ -90,9 +90,9 @@ struct ClienteCard: View {
         HStack(spacing: 14) {
             AvatarCliente(cliente: cliente, tamanho: 46)
             VStack(alignment: .leading, spacing: 3) {
-                Text(cliente.nome).font(.body.weight(.medium))
+                Text(cliente.nome).font(Fonte.texto(17, .medio))
                 if !cliente.nicho.isEmpty {
-                    Text(cliente.nicho).font(.subheadline).foregroundStyle(.secondary)
+                    Text(cliente.nicho).font(Fonte.texto(15)).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 6) {
                     Text(abertas.isEmpty ? "Tudo em dia" : "\(abertas.count) em aberto")
@@ -102,13 +102,13 @@ struct ClienteCard: View {
                             .foregroundStyle(proxima.atrasada ? Theme.alerta : Color.secondary)
                     }
                 }
-                .font(.caption)
+                .font(Fonte.texto(12))
                 .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: "chevron.right")
-                .font(.footnote)
-                .foregroundStyle(.tertiary)
+            Image(systemName: "arrow.right")
+                .font(.system(size: 15, weight: .light))
+                .foregroundStyle(Theme.marca)
         }
         .card(padding: 14)
     }
@@ -135,8 +135,12 @@ struct ClienteDetalheView: View {
                 Button {
                     app.nova(NovaAtividadePedido(tipo: .tarefa, cliente: cliente))
                 } label: {
-                    Label("Nova atividade para \(cliente.nome)", systemImage: "plus")
-                        .frame(maxWidth: .infinity)
+                    HStack {
+                        Text("Nova atividade para \(cliente.nome)")
+                        Spacer()
+                        Image(systemName: "arrow.right").font(.system(size: 15, weight: .light))
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PilulaStyle())
 
@@ -146,12 +150,12 @@ struct ClienteDetalheView: View {
                         Button(mostrarFeitas ? "Só em aberto" : "Ver todas") {
                             withAnimation { mostrarFeitas.toggle() }
                         }
-                        .font(.caption)
+                        .font(Fonte.texto(12))
                         .foregroundStyle(.secondary)
                     }
                     if itens.isEmpty {
                         Text("Nada em aberto para este cliente.")
-                            .font(.subheadline)
+                            .font(Fonte.texto(15))
                             .foregroundStyle(.secondary)
                             .card()
                     } else {
@@ -169,7 +173,7 @@ struct ClienteDetalheView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         TituloSecao(titulo: "Observações")
                         Text(cliente.observacoes)
-                            .font(.subheadline)
+                            .font(Fonte.texto(15))
                             .card()
                     }
                 }
@@ -198,7 +202,7 @@ struct ClienteDetalheView: View {
                         Text(cliente.nicho).foregroundStyle(.secondary)
                     }
                     if !cliente.ativo {
-                        Text("Arquivado").font(.caption).foregroundStyle(.secondary)
+                        Text("Arquivado").font(Fonte.texto(12)).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -256,7 +260,7 @@ struct ClienteEditor: View {
                     HStack {
                         Spacer()
                         Text(iniciaisPrevia)
-                            .font(.system(size: 30, weight: .medium, design: .serif))
+                            .font(Fonte.titulo(30))
                             .foregroundStyle(Color(hex: corHex))
                             .frame(width: 80, height: 80)
                             .background(Color(hex: corHex).opacity(0.15), in: Circle())
@@ -318,6 +322,7 @@ struct ClienteEditor: View {
                     }
                 }
             }
+            .font(Fonte.texto(16))
             .scrollContentBackground(.hidden)
             .background(Theme.fundo)
             .navigationTitle(cliente == nil ? "Novo cliente" : "Editar cliente")

@@ -42,10 +42,10 @@ struct BarraAbas: View {
             Button(action: onNova) {
                 Image(systemName: "plus")
                     .font(.title2.weight(.medium))
-                    .foregroundStyle(Theme.textoNoAcento)
+                    .foregroundStyle(Color.white)
                     .frame(width: 56, height: 56)
-                    .background(Theme.acento, in: Circle())
-                    .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
+                    .background(Theme.marca, in: Circle())
+                    .shadow(color: Theme.marca.opacity(0.35), radius: 10, y: 4)
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
@@ -75,9 +75,9 @@ struct BarraAbas: View {
                     .frame(width: 48, height: 30)
                     .background(ativo ? Theme.marcaSuave : Color.clear, in: Capsule())
                 Text(titulo)
-                    .font(.caption2)
+                    .font(Fonte.texto(11))
             }
-            .foregroundStyle(ativo ? Color.primary : Color.secondary)
+            .foregroundStyle(ativo ? Theme.marca : Theme.textoSecundario)
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
@@ -91,6 +91,7 @@ struct CabecalhoPagina<Extra: View>: View {
     var subtitulo: String?
     var busca: Binding<String>?
     var placeholderBusca: String
+    var pincel: Bool
     let extra: Extra
 
     @Environment(AppEstado.self) private var app
@@ -100,12 +101,14 @@ struct CabecalhoPagina<Extra: View>: View {
         subtitulo: String? = nil,
         busca: Binding<String>? = nil,
         placeholderBusca: String = "Buscar",
+        pincel: Bool = false,
         @ViewBuilder extra: () -> Extra
     ) {
         self.titulo = titulo
         self.subtitulo = subtitulo
         self.busca = busca
         self.placeholderBusca = placeholderBusca
+        self.pincel = pincel
         self.extra = extra()
     }
 
@@ -116,10 +119,15 @@ struct CabecalhoPagina<Extra: View>: View {
                     .font(Theme.tituloSerifado())
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
+                if pincel {
+                    PincelMarca(largura: 130)
+                        .padding(.leading, 4)
+                        .padding(.bottom, 2)
+                }
                 if let subtitulo {
                     Text(subtitulo)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(Fonte.chamada(13))
+                        .foregroundStyle(Theme.textoSecundario)
                 }
             }
 
@@ -155,8 +163,8 @@ struct CabecalhoPagina<Extra: View>: View {
 }
 
 extension CabecalhoPagina where Extra == EmptyView {
-    init(_ titulo: String, subtitulo: String? = nil, busca: Binding<String>? = nil, placeholderBusca: String = "Buscar") {
-        self.init(titulo, subtitulo: subtitulo, busca: busca, placeholderBusca: placeholderBusca) { EmptyView() }
+    init(_ titulo: String, subtitulo: String? = nil, busca: Binding<String>? = nil, placeholderBusca: String = "Buscar", pincel: Bool = false) {
+        self.init(titulo, subtitulo: subtitulo, busca: busca, placeholderBusca: placeholderBusca, pincel: pincel) { EmptyView() }
     }
 }
 
@@ -184,26 +192,13 @@ struct AvatarUsuaria: View {
     var body: some View {
         Button(action: acao) {
             Text(String(nome.first ?? "H").uppercased())
-                .font(.system(size: 18, weight: .regular, design: .serif))
+                .font(Fonte.titulo(18))
                 .foregroundStyle(Theme.marca)
                 .frame(width: 40, height: 40)
                 .background(Theme.marcaSuave, in: Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Ajustes")
-    }
-}
-
-/// Monograma "HB" no estilo do ícone do app.
-struct LogoHB: View {
-    var tamanho: CGFloat = 52
-
-    var body: some View {
-        Text("HB")
-            .font(.system(size: tamanho * 0.42, weight: .bold))
-            .foregroundStyle(Theme.textoNoAcento)
-            .frame(width: tamanho, height: tamanho)
-            .background(Theme.acento, in: RoundedRectangle(cornerRadius: tamanho * 0.28, style: .continuous))
     }
 }
 
@@ -218,7 +213,7 @@ struct FiltroChip: View {
     var body: some View {
         Button(action: acao) {
             Text(titulo)
-                .font(.subheadline.weight(ativo ? .semibold : .regular))
+                .font(Fonte.chamada(14, ativo ? .semibold : .medio))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .foregroundStyle(ativo ? Theme.textoNoAcento : Color.primary)
@@ -240,7 +235,7 @@ struct ContextoChip: View {
             HStack(spacing: 6) {
                 Circle().fill(contexto.cor).frame(width: 7, height: 7)
                 Text(contexto.rawValue)
-                    .font(.subheadline)
+                    .font(Fonte.texto(15))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -303,7 +298,7 @@ struct SegmentoPilula<Valor: Hashable>: View {
                     withAnimation(.snappy(duration: 0.25)) { selecao = opcao }
                 } label: {
                     Text(titulo(opcao))
-                        .font(.subheadline.weight(ativo ? .semibold : .regular))
+                        .font(Fonte.chamada(14, ativo ? .semibold : .medio))
                         .foregroundStyle(ativo ? Color.primary : Color.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
@@ -332,7 +327,7 @@ struct Chip: View {
             if let icone { Image(systemName: icone) }
             Text(texto).lineLimit(1)
         }
-        .font(.caption.weight(.medium))
+        .font(Fonte.texto(12, .medio))
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .foregroundStyle(cor)
@@ -350,11 +345,13 @@ struct EstadoVazio: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            AsteriscoMarca(tamanho: 20)
+                .padding(.bottom, 4)
             Text(titulo)
-                .font(.headline)
+                .font(Fonte.titulo(21))
             if let texto {
                 Text(texto)
-                    .font(.subheadline)
+                    .font(Fonte.texto(15))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -380,11 +377,11 @@ struct TituloSecao: View {
     var body: some View {
         HStack {
             Text(titulo)
-                .font(.system(.title3, design: .serif))
+                .font(Fonte.titulo(21))
                 .foregroundStyle(cor)
             Spacer()
             if let detalhe {
-                Text(detalhe).font(.subheadline).foregroundStyle(.secondary)
+                Text(detalhe).font(Fonte.texto(15)).foregroundStyle(.secondary)
             }
         }
     }
@@ -396,7 +393,7 @@ struct AvatarCliente: View {
 
     var body: some View {
         Text(cliente.iniciais)
-            .font(.system(size: tamanho * 0.38, weight: .medium, design: .serif))
+            .font(Fonte.titulo(tamanho * 0.38))
             .foregroundStyle(cliente.cor)
             .frame(width: tamanho, height: tamanho)
             .background(cliente.cor.opacity(0.15), in: Circle())
@@ -420,13 +417,13 @@ struct AtividadeRow: View {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(atividade.titulo.isEmpty ? "Sem título" : atividade.titulo)
-                        .font(.body)
+                        .font(Fonte.texto(17))
                         .strikethrough(!atividade.aberta)
                         .foregroundStyle(atividade.aberta ? Color.primary : Color.secondary)
                         .lineLimit(2)
                     Spacer(minLength: 4)
                     if atividade.prioridade == .alta && atividade.aberta {
-                        Image(systemName: "flag.fill").font(.caption2).foregroundStyle(Theme.alerta)
+                        Image(systemName: "flag.fill").font(Fonte.texto(11)).foregroundStyle(Theme.alerta)
                     }
                 }
 
@@ -450,14 +447,14 @@ struct AtividadeRow: View {
                         Text("· Cancelada")
                     }
                 }
-                .font(.caption)
+                .font(Fonte.texto(12))
                 .foregroundStyle(.secondary)
 
                 if let progresso = atividade.progressoEtapas, atividade.aberta {
                     HStack(spacing: 8) {
                         ProgressView(value: progresso).tint(atividade.contexto.cor)
                         Text("\((atividade.etapas ?? []).filter(\.feita).count)/\(atividade.etapas?.count ?? 0)")
-                            .font(.caption2.monospacedDigit())
+                            .font(Fonte.texto(11).monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                 }

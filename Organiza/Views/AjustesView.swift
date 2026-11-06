@@ -29,11 +29,13 @@ struct AjustesView: View {
             Form {
                 Section {
                     HStack(spacing: 14) {
-                        LogoHB(tamanho: 48)
+                        LogoMarca(tamanho: 34)
+                            .frame(width: 56, height: 56)
+                            .background(Theme.fundo, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("HB Organiza").font(.system(.headline, design: .serif))
+                            Text("HB Organiza").font(Fonte.titulo(18))
                             Text("Feito com carinho para a \(nome.isEmpty ? "Hanna" : nome) 💜")
-                                .font(.caption)
+                                .font(Fonte.texto(12))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -77,6 +79,7 @@ struct AjustesView: View {
                     Text("Apaga tarefas concluídas ou canceladas e compromissos que já passaram há mais de 30 dias.")
                 }
             }
+            .font(Fonte.texto(16))
             .scrollContentBackground(.hidden)
             .background(Theme.fundo)
             .navigationTitle("Ajustes")
@@ -163,13 +166,14 @@ struct LembretesView: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(item.atividade.titulo)
                                 Text("\(Fmt.quando(item.quando, temHorario: true)) · \(OpcoesLembrete.nome(item.minutos))")
-                                    .font(.caption)
+                                    .font(Fonte.texto(12))
                                     .foregroundStyle(.secondary)
                             }
                         }
                     }
                 }
             }
+            .font(Fonte.texto(16))
             .scrollContentBackground(.hidden)
             .background(Theme.fundo)
             .navigationTitle("Próximos lembretes")

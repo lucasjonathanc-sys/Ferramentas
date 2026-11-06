@@ -1,34 +1,164 @@
+import CoreText
 import SwiftUI
 import UIKit
 
-/// Cores e estilos do app.
-/// Por enquanto neutro (off-white + preto). `marca` vai virar o vinho da identidade visual da Hanna.
+/// Cores e estilos do app, seguindo a identidade visual da marca (Dulce Berdulles):
+/// preto #0B0B0B, bege #D6CDC2, off-white #F6F4EF, vinho #7A0E15 e taupe #82766B.
 enum Theme {
-    static let fundo = Color.dinamica("F7F4F2", "111012")
-    static let card = Color.dinamica("FFFFFF", "1C1A1D")
-    static let campo = Color.dinamica("FFFFFF", "232026")
-    static let borda = Color.dinamica("E6E0DE", "34303A")
-    static let suave = Color.dinamica("EFEAE8", "2A262D")
+    static let preto = Color(hex: "0B0B0B")
+    static let bege = Color(hex: "D6CDC2")
+    static let offWhite = Color(hex: "F6F4EF")
+    static let taupe = Color(hex: "82766B")
+
+    static let fundo = Color.dinamica("F6F4EF", "0B0B0B")
+    static let card = Color.dinamica("FCFBF8", "161413")
+    static let campo = Color.dinamica("FFFFFF", "1B1918")
+    static let borda = Color.dinamica("E2DAD0", "2E2A27")
+    static let suave = Color.dinamica("ECE6DE", "221F1D")
+    static let textoSecundario = Color.dinamica("82766B", "A79C92")
 
     /// Botões principais (pílula preta).
-    static let acento = Color.dinamica("1B1A1C", "F4F1EF")
-    static let textoNoAcento = Color.dinamica("FFFFFF", "111012")
+    static let acento = Color.dinamica("0B0B0B", "F6F4EF")
+    static let textoNoAcento = Color.dinamica("F6F4EF", "0B0B0B")
 
-    /// Cor da marca (provisória, neutra).
-    static let marca = Color.dinamica("6E6470", "B9AFBA")
-    static let marcaSuave = Color.dinamica("ECE6EC", "2E2930")
+    /// Vinho da marca: botão +, seleção, hora atual, ponto da logo.
+    static let marca = Color.dinamica("7A0E15", "B8323B")
+    static let marcaSuave = Color.dinamica("F0E2E0", "2B1517")
 
-    static let alerta = Color.dinamica("C2454B", "E8777B")
-    static let sucesso = Color.dinamica("5E9A6E", "86C496")
+    static let alerta = Color.dinamica("A3262C", "E0676C")
+    static let sucesso = Color.dinamica("5E7556", "8FAA86")
 
-    /// Cores disponíveis para identificar clientes.
+    /// Cores disponíveis para identificar clientes (tons da paleta).
     static let paletaClientes = [
-        "C97B8E", "8E7CC3", "6F93C9", "7FA37A", "C9A15B",
-        "D48A6A", "5FA8A8", "9A6B5A", "6B6470", "B5677A",
+        "7A0E15", "82766B", "B08968", "4F5D75", "C2A878",
+        "5E7556", "A85C5C", "3E3A39", "9C8A7A", "6D4C5C",
     ]
 
     static func tituloSerifado(_ tamanho: CGFloat = 34) -> Font {
-        .system(size: tamanho, weight: .regular, design: .serif)
+        Fonte.titulo(tamanho)
+    }
+}
+
+// MARK: - Fontes da marca
+
+/// Playfair Display (títulos), Montserrat (chamadas) e Inter (textos).
+enum Fonte {
+    enum Peso { case regular, medio, semibold }
+
+    static func titulo(_ tamanho: CGFloat, italico: Bool = false) -> Font {
+        .custom(italico ? "PlayfairDisplay-Italic" : "PlayfairDisplay-Regular", size: tamanho, relativeTo: .title)
+    }
+
+    static func chamada(_ tamanho: CGFloat, _ peso: Peso = .medio) -> Font {
+        .custom(peso == .semibold ? "Montserrat-SemiBold" : "Montserrat-Medium", size: tamanho, relativeTo: .subheadline)
+    }
+
+    static func texto(_ tamanho: CGFloat, _ peso: Peso = .regular) -> Font {
+        let nome: String
+        switch peso {
+        case .regular: nome = "Inter-Regular"
+        case .medio: nome = "Inter-Medium"
+        case .semibold: nome = "Inter-SemiBold"
+        }
+        return .custom(nome, size: tamanho, relativeTo: tamanho >= 17 ? .body : (tamanho >= 14 ? .subheadline : .caption))
+    }
+
+    /// Registra os arquivos .ttf do app (não precisa de Info.plist).
+    static func registrar() {
+        var urls = Bundle.main.urls(forResourcesWithExtension: "ttf", subdirectory: nil) ?? []
+        urls += Bundle.main.urls(forResourcesWithExtension: "ttf", subdirectory: "Fonts") ?? []
+        for url in urls {
+            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+        }
+    }
+
+    /// Aplica as fontes da marca nas barras de navegação (telas em Form/sheets).
+    static func configurarAparencia() {
+        let barra = UINavigationBarAppearance()
+        barra.configureWithTransparentBackground()
+        barra.backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "0B0B0B") : UIColor(hex: "F6F4EF") }
+        if let f = UIFont(name: "PlayfairDisplay-Regular", size: 19) {
+            barra.titleTextAttributes = [.font: f]
+        }
+        if let f = UIFont(name: "PlayfairDisplay-Regular", size: 34) {
+            barra.largeTitleTextAttributes = [.font: f]
+        }
+        if let f = UIFont(name: "Inter-Medium", size: 17) {
+            let botao = UIBarButtonItemAppearance()
+            botao.normal.titleTextAttributes = [.font: f]
+            barra.buttonAppearance = botao
+            barra.doneButtonAppearance = botao
+        }
+        UINavigationBar.appearance().standardAppearance = barra
+        UINavigationBar.appearance().scrollEdgeAppearance = barra
+        UINavigationBar.appearance().compactAppearance = barra
+    }
+}
+
+// MARK: - Elementos de apoio da marca
+
+/// Traço de pincel vinho (como o da identidade, embaixo do título).
+struct TracoPincel: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.midY + r.height * 0.25))
+        p.addCurve(
+            to: CGPoint(x: r.maxX, y: r.midY - r.height * 0.15),
+            control1: CGPoint(x: r.minX + r.width * 0.35, y: r.minY - r.height * 0.1),
+            control2: CGPoint(x: r.minX + r.width * 0.6, y: r.maxY + r.height * 0.2)
+        )
+        return p
+    }
+}
+
+struct PincelMarca: View {
+    var largura: CGFloat = 120
+
+    var body: some View {
+        TracoPincel()
+            .stroke(Theme.marca, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            .frame(width: largura, height: 10)
+    }
+}
+
+/// Asterisco fino de 8 pontas (elemento de apoio da marca).
+struct Asterisco: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let c = CGPoint(x: r.midX, y: r.midY)
+        let raio = min(r.width, r.height) / 2
+        for i in 0..<4 {
+            let angulo = Double(i) * .pi / 4
+            let dx = CGFloat(cos(angulo)) * raio
+            let dy = CGFloat(sin(angulo)) * raio
+            p.move(to: CGPoint(x: c.x - dx, y: c.y - dy))
+            p.addLine(to: CGPoint(x: c.x + dx, y: c.y + dy))
+        }
+        return p
+    }
+}
+
+struct AsteriscoMarca: View {
+    var tamanho: CGFloat = 18
+
+    var body: some View {
+        Asterisco()
+            .stroke(Theme.marca, style: StrokeStyle(lineWidth: max(1, tamanho / 14), lineCap: .round))
+            .frame(width: tamanho, height: tamanho)
+    }
+}
+
+/// Logo "DB." com o ponto vinho.
+struct LogoMarca: View {
+    var tamanho: CGFloat = 28
+    var cor: Color = .primary
+
+    var body: some View {
+        HStack(alignment: .lastTextBaseline, spacing: 0) {
+            Text("DB").foregroundStyle(cor)
+            Text(".").foregroundStyle(Theme.marca)
+        }
+        .font(Fonte.titulo(tamanho))
     }
 }
 
@@ -90,7 +220,7 @@ struct PilulaStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.subheadline.weight(.semibold))
+            .font(Fonte.chamada(14))
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .foregroundStyle(principal ? Theme.textoNoAcento : Color.primary)

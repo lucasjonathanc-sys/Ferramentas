@@ -24,6 +24,7 @@ struct RootView: View {
 
             BarraAbas(aba: $aba) { estado.nova() }
         }
+        .font(Fonte.texto(16))
         .background(Theme.fundo.ignoresSafeArea())
         .environment(estado)
         .tint(Theme.acento)

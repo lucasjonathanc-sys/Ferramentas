@@ -16,11 +16,11 @@ enum Contexto: String, CaseIterable, Identifiable {
 
     var cor: Color {
         switch self {
-        case .chinaLink: return Color(hex: "8E7CC3")
-        case .freela: return Color(hex: "C97B8E")
-        case .pessoal: return Color(hex: "7FA37A")
-        case .faculdade: return Color(hex: "6F93C9")
-        case .igreja: return Color(hex: "C9A15B")
+        case .chinaLink: return Theme.marca
+        case .freela: return Color(hex: "B08968")
+        case .pessoal: return Color(hex: "5E7556")
+        case .faculdade: return Color(hex: "4F5D75")
+        case .igreja: return Color(hex: "B8975A")
         }
     }
 
@@ -190,7 +190,7 @@ final class Cliente {
     var instagram: String = ""
     var contato: String = ""
     var valorMensal: Double = 0
-    var corHex: String = "C97B8E"
+    var corHex: String = "82766B"
     var observacoes: String = ""
     var ativo: Bool = true
     var criadoEm: Date = Date()

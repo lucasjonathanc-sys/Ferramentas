@@ -4,7 +4,7 @@ App de iOS (SwiftUI + SwiftData) para organizar a rotina de quem trabalha como *
 
 ## O que o app faz
 
-Inspirado num app minimalista de referência: fundo off-white, títulos serifados e botões em pílula preta. As cores da marca da Hanna (preto + vinho) ainda vão entrar.
+Visual da identidade **Dulce Berdulles**: off-white `#F6F4EF`, preto `#0B0B0B`, vinho `#7A0E15`, bege `#D6CDC2` e taupe `#82766B`; tipografia Playfair Display (títulos), Montserrat (chamadas) e Inter (textos); logo **DB.**, traço de pincel, asterisco e seta como elementos de apoio.
 
 | Aba | Para quê |
 |---|---|
@@ -36,6 +36,7 @@ Precisa de um **Mac com Xcode 16 ou mais novo** (o projeto usa pastas sincroniza
 Organiza/
 ├── App/          OrganizaApp, Theme (cores/datas), Notificacoes
 ├── Models/       Atividade, Etapa, Cliente (SwiftData), enums e ações
+├── Fonts/        Playfair Display, Montserrat e Inter (licença OFL em LicencasFontes/)
 ├── Components/   Cabeçalho, barra de abas, chips, linha de atividade
 ├── Views/        Hoje, Tarefas, Agenda, Clientes, Nova atividade, Ajustes
 └── Assets.xcassets

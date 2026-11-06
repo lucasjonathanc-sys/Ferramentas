@@ -7,6 +7,11 @@ import UserNotifications
 struct OrganizaApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        Fonte.registrar()
+        Fonte.configurarAparencia()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

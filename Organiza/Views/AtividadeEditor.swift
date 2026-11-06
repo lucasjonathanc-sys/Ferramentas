@@ -85,6 +85,7 @@ struct AtividadeEditor: View {
 
             rodape
         }
+        .font(Fonte.texto(16))
         .background(Theme.fundo.ignoresSafeArea())
         .confirmationDialog("Apagar esta atividade?", isPresented: $confirmarExclusao, titleVisibility: .visible) {
             Button("Apagar", role: .destructive) {
@@ -113,7 +114,7 @@ struct AtividadeEditor: View {
     private var cabecalho: some View {
         HStack {
             Text(editando ? "Editar atividade" : "Nova atividade")
-                .font(.system(.title3, design: .serif))
+                .font(Fonte.titulo(21))
             Spacer()
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
@@ -181,7 +182,7 @@ struct AtividadeEditor: View {
                     DatePicker("", selection: $horaFim, displayedComponents: .hourAndMinute)
                         .labelsHidden()
                     Spacer()
-                    Text(duracaoTexto).font(.caption).foregroundStyle(.secondary)
+                    Text(duracaoTexto).font(Fonte.texto(12)).foregroundStyle(.secondary)
                 }
                 .campo()
             }
@@ -228,7 +229,7 @@ struct AtividadeEditor: View {
                         .foregroundStyle(Color.primary)
                 }
                 Spacer()
-                Image(systemName: "chevron.up.chevron.down").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "chevron.up.chevron.down").font(Fonte.texto(12)).foregroundStyle(.secondary)
             }
             .campo()
         }
@@ -241,15 +242,15 @@ struct AtividadeEditor: View {
             } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Mais opções").font(.subheadline.weight(.medium)).foregroundStyle(Color.primary)
+                        Text("Mais opções").font(Fonte.texto(15, .medio)).foregroundStyle(Color.primary)
                         Text(ehCompromisso
                              ? "Descrição, local, link, repetição e lembretes"
                              : "Descrição, prioridade, repetição e lembretes")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(Fonte.texto(12)).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Image(systemName: maisOpcoes ? "chevron.up" : "chevron.down")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(Fonte.texto(12)).foregroundStyle(.secondary)
                 }
                 .campo()
             }
@@ -271,7 +272,7 @@ struct AtividadeEditor: View {
                     HStack {
                         Text(repeticao.rawValue).foregroundStyle(Color.primary)
                         Spacer()
-                        Image(systemName: "chevron.up.chevron.down").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "chevron.up.chevron.down").font(Fonte.texto(12)).foregroundStyle(.secondary)
                     }
                     .campo()
                 }
@@ -318,7 +319,7 @@ struct AtividadeEditor: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .font(.subheadline)
+                .font(Fonte.texto(15))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(Theme.marcaSuave, in: Capsule())
@@ -332,9 +333,9 @@ struct AtividadeEditor: View {
             } label: {
                 HStack(spacing: 6) {
                     Text("Adicionar lembrete")
-                    Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                    Image(systemName: "chevron.up.chevron.down").font(Fonte.texto(11))
                 }
-                .font(.subheadline)
+                .font(Fonte.texto(15))
                 .foregroundStyle(Color.primary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
@@ -393,7 +394,7 @@ struct AtividadeEditor: View {
                     withAnimation { etapas = trabalho.etapasSugeridas.map { EtapaRascunho(titulo: $0) } }
                 } label: {
                     Label("Usar etapas sugeridas para \(trabalho.rawValue)", systemImage: "wand.and.stars")
-                        .font(.subheadline)
+                        .font(Fonte.texto(15))
                 }
                 .tint(Color.primary)
             }
@@ -425,7 +426,7 @@ struct AtividadeEditor: View {
             Button(role: .destructive) {
                 confirmarExclusao = true
             } label: {
-                Label("Apagar", systemImage: "trash").font(.subheadline)
+                Label("Apagar", systemImage: "trash").font(Fonte.texto(15))
             }
             .tint(Theme.alerta)
             .padding(.top, 4)
@@ -453,9 +454,9 @@ struct AtividadeEditor: View {
 
     private func rotulo(_ texto: String, opcional: Bool = false) -> some View {
         HStack(spacing: 4) {
-            Text(texto).font(.subheadline.weight(.medium))
+            Text(texto).font(Fonte.texto(15, .medio))
             if opcional {
-                Text("(opcional)").font(.subheadline).foregroundStyle(.secondary)
+                Text("(opcional)").font(Fonte.texto(15)).foregroundStyle(.secondary)
             }
         }
     }
@@ -472,7 +473,7 @@ struct AtividadeEditor: View {
             HStack {
                 Text(texto).foregroundStyle(.secondary)
                 Spacer()
-                Image(systemName: "plus").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "plus").font(Fonte.texto(12)).foregroundStyle(.secondary)
             }
             .campo()
         }

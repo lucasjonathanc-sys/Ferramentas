@@ -68,7 +68,7 @@ struct AgendaView: View {
         HStack(spacing: 12) {
             Button { avancar(-1) } label: { Image(systemName: "chevron.left") }
             Text(tituloPeriodo)
-                .font(.subheadline.weight(.medium))
+                .font(Fonte.texto(15, .medio))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             Button { avancar(1) } label: { Image(systemName: "chevron.right") }
@@ -76,7 +76,7 @@ struct AgendaView: View {
             Button("Hoje") {
                 withAnimation(.snappy) { referencia = cal.startOfDay(for: Date()) }
             }
-            .font(.subheadline)
+            .font(Fonte.texto(15))
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .overlay(Capsule().stroke(Theme.borda, lineWidth: 1))
@@ -150,10 +150,10 @@ struct LinhaDoTempo: View {
                 let hoje = cal.isDateInToday(dia)
                 VStack(spacing: 4) {
                     Text(Fmt.diaCurto(dia))
-                        .font(.caption)
+                        .font(Fonte.texto(12))
                         .foregroundStyle(.secondary)
                     Text("\(cal.component(.day, from: dia))")
-                        .font(.subheadline.weight(hoje ? .semibold : .regular))
+                        .font(Fonte.texto(15, hoje ? .semibold : .regular))
                         .foregroundStyle(hoje ? Theme.textoNoAcento : Color.primary)
                         .frame(width: 30, height: 30)
                         .background(hoje ? Theme.acento : Color.clear, in: Circle())
@@ -168,7 +168,7 @@ struct LinhaDoTempo: View {
     private var semHora: some View {
         HStack(alignment: .top, spacing: 0) {
             Text("Sem\nhora")
-                .font(.caption2)
+                .font(Fonte.texto(11))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
                 .frame(width: larguraHoras - 8, alignment: .trailing)
@@ -186,7 +186,7 @@ struct LinhaDoTempo: View {
                                     .lineLimit(1)
                                     .strikethrough(a.status == .concluida)
                             }
-                            .font(.caption2)
+                            .font(Fonte.texto(11))
                             .foregroundStyle(a.status == .concluida ? Color.secondary : Color.primary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 4)
@@ -213,7 +213,7 @@ struct LinhaDoTempo: View {
             VStack(spacing: 0) {
                 ForEach(0..<24, id: \.self) { h in
                     Text(String(format: "%02d:00", h))
-                        .font(.caption2.monospacedDigit())
+                        .font(Fonte.texto(11).monospacedDigit())
                         .foregroundStyle(.secondary)
                         .frame(width: larguraHoras - 8, height: alturaHora, alignment: .topTrailing)
                         .padding(.trailing, 8)
@@ -276,12 +276,12 @@ struct LinhaDoTempo: View {
                 cor.frame(width: 3)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(a.titulo)
-                        .font(.caption2.weight(.semibold))
+                        .font(Fonte.texto(11, .semibold))
                         .lineLimit(altura(e) > 40 ? 2 : 1)
                         .strikethrough(a.status == .concluida)
                     if altura(e) > 34 {
                         Text(Fmt.hora.string(from: e.inicio))
-                            .font(.caption2)
+                            .font(Fonte.texto(11))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -305,18 +305,18 @@ struct LinhaDoTempo: View {
             let y = posicaoY(agora)
             ZStack(alignment: .topLeading) {
                 Text(Fmt.hora.string(from: agora))
-                    .font(.caption2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(Theme.textoNoAcento)
+                    .font(Fonte.texto(11, .semibold).monospacedDigit())
+                    .foregroundStyle(Color.white)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(Theme.acento, in: Capsule())
+                    .background(Theme.marca, in: Capsule())
                     .frame(width: larguraHoras, alignment: .trailing)
                     .offset(y: y - 9)
                 Circle()
-                    .fill(Theme.acento)
+                    .fill(Theme.marca)
                     .frame(width: 8, height: 8)
                     .offset(x: larguraHoras + colunaLargura * CGFloat(indice) - 4, y: y - 4)
-                Theme.acento
+                Theme.marca
                     .frame(width: colunaLargura, height: 1.5)
                     .offset(x: larguraHoras + colunaLargura * CGFloat(indice), y: y - 0.75)
             }
@@ -422,7 +422,7 @@ struct MesView: View {
                     HStack(spacing: 0) {
                         ForEach(Array(nomesDias.enumerated()), id: \.offset) { _, nome in
                             Text(nome)
-                                .font(.caption)
+                                .font(Fonte.texto(12))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity)
                         }
@@ -452,7 +452,7 @@ struct MesView: View {
                     }
                     if doDia.isEmpty {
                         Text("Nada marcado neste dia.")
-                            .font(.subheadline)
+                            .font(Fonte.texto(15))
                             .foregroundStyle(.secondary)
                             .card()
                     } else {
@@ -486,7 +486,7 @@ struct MesView: View {
         } label: {
             VStack(spacing: 4) {
                 Text("\(cal.component(.day, from: dia))")
-                    .font(.subheadline.weight(hoje || ativo ? .semibold : .regular))
+                    .font(Fonte.texto(15, hoje || ativo ? .semibold : .regular))
                     .foregroundStyle(ativo ? Theme.textoNoAcento : Color.primary)
                     .frame(width: 32, height: 32)
                     .background {
