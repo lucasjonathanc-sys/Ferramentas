@@ -323,3 +323,9 @@ input::placeholder, textarea::placeholder { color: var(--texto2); }
 .campo-rotulado .campo-nome { width: 112px; flex-shrink: 0; color: var(--texto2); font-size: 15px; padding-top: 1px; }
 .campo-rotulado input, .campo-rotulado textarea { font-size: 16px; }
 .campo-rotulado textarea { min-height: 44px; }
+
+/* MARK: Detalhes da atividade */
+
+.botao-reuniao { background: var(--vinho); color: #fff; text-decoration: none; padding: 15px 20px; font-size: 15px; }
+.detalhe-linha { display: flex; gap: 12px; align-items: flex-start; color: var(--texto); font-size: 16px; line-height: 1.35; }
+.detalhe-icone { width: 22px; flex-shrink: 0; color: var(--texto2); padding-top: 1px; display: grid; place-items: center; }

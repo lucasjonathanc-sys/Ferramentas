@@ -143,7 +143,7 @@ function LinhaDoTempo({ dias, atividades }: { dias: Date[]; atividades: Atividad
                     key={a.id}
                     className="pill-semhora"
                     style={{ background: `color-mix(in srgb, ${cor} 14%, transparent)`, color: a.status === 'concluida' ? 'var(--texto2)' : undefined, textDecoration: a.status === 'concluida' ? 'line-through' : undefined }}
-                    onClick={() => app.abrir({ tipo: 'editar', id: a.id })}
+                    onClick={() => app.abrir({ tipo: 'detalhes', id: a.id, dia: d.toISOString() })}
                   >
                     <span className="bolinha" style={{ background: cor, width: 5, height: 5 }} />
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.titulo}</span>
@@ -190,7 +190,7 @@ function LinhaDoTempo({ dias, atividades }: { dias: Date[]; atividades: Atividad
                       background: `color-mix(in srgb, ${cor} 16%, var(--fundo))`,
                       opacity: e.atividade.status === 'concluida' ? 0.55 : 1,
                     }}
-                    onClick={() => app.abrir({ tipo: 'editar', id: e.atividade.id })}
+                    onClick={() => app.abrir({ tipo: 'detalhes', id: e.atividade.id, dia: d.toISOString() })}
                   >
                     <span className="barra-cor" style={{ background: cor }} />
                     <span className="txt">
