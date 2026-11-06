@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useApp } from '../contexto'
-import { useEstado, moverParaColuna } from '../store'
+import { useEstado, moverParaColuna, criarCartaoRapido } from '../store'
 import { Icone } from '../componentes/Base'
 import {
   type Atividade, type ColunaQuadro, COLUNAS, atrasada, colunaDe, corContexto, dataDe, ehCompromisso, ordenacao,
@@ -26,6 +26,7 @@ export function Quadro({ busca }: { busca: string }) {
   const app = useApp()
   const { atividades, clientes } = useEstado()
   const [arrasto, setArrasto] = useState<Arrasto | null>(null)
+  const [adicionando, setAdicionando] = useState<ColunaQuadro | null>(null)
   const quadroRef = useRef<HTMLDivElement>(null)
   const colunasRef = useRef<Partial<Record<ColunaQuadro, HTMLDivElement | null>>>({})
   const arrastando = useRef(false)
@@ -47,7 +48,11 @@ export function Quadro({ busca }: { busca: string }) {
     const lista = tarefas.filter((a) => colunaDe(a) === c)
     return c === 'feito'
       ? lista.sort((a, b) => (b.concluidaEm ?? '').localeCompare(a.concluidaEm ?? ''))
-      : lista.sort(ordenacao)
+      : lista.sort((x, y) => {
+        // Com data primeiro (por data); sem data por ordem de criação, o mais novo embaixo (como no Trello)
+        if (!x.data && !y.data) return x.criadaEm.localeCompare(y.criadaEm)
+        return ordenacao(x, y)
+      })
   }
 
   // Bloqueia a rolagem da página enquanto arrasta (iOS precisa de listener não passivo)
@@ -171,14 +176,16 @@ export function Quadro({ busca }: { busca: string }) {
                     {c.valor === 'feito' ? `Concluídas nos últimos ${DIAS_NO_FEITO} dias aparecem aqui` : 'Arraste um cartão para cá'}
                   </div>
                 )}
-                {c.valor !== 'feito' && (
-                  <button
-                    className="coluna-adicionar"
-                    onClick={() => app.abrir({ tipo: 'nova', atividadeTipo: 'tarefa', etapa: c.valor as Exclude<ColunaQuadro, 'feito'> })}
-                  >
+                {c.valor !== 'feito' && (adicionando === c.valor ? (
+                  <CartaoRapido
+                    etapa={c.valor as Exclude<ColunaQuadro, 'feito'>}
+                    fechar={() => setAdicionando(null)}
+                  />
+                ) : (
+                  <button className="coluna-adicionar" onClick={() => setAdicionando(c.valor)}>
                     <Icone nome="mais" tamanho={14} /> Adicionar cartão
                   </button>
-                )}
+                ))}
               </div>
             </div>
           )
@@ -254,6 +261,49 @@ function Cartao(props: {
           {COLUNAS.filter((c) => c.valor !== colunaDe(a)).map((c) => <option key={c.valor} value={c.valor}>{c.nome}</option>)}
         </select>
       </label>
+    </div>
+  )
+}
+
+/** Campo para criar um cartão só com o título, direto na coluna (como no Trello). */
+function CartaoRapido({ etapa, fechar }: { etapa: Exclude<ColunaQuadro, 'feito'>; fechar: () => void }) {
+  const [titulo, setTitulo] = useState('')
+  const campo = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => { campo.current?.focus() }, [])
+
+  const adicionar = () => {
+    if (!titulo.trim()) return
+    criarCartaoRapido(titulo, etapa)
+    setTitulo('')
+    campo.current?.focus()
+  }
+
+  return (
+    <div className="cartao-rapido">
+      <textarea
+        ref={campo}
+        value={titulo}
+        rows={2}
+        placeholder="Título do cartão…"
+        enterKeyHint="done"
+        onChange={(e) => setTitulo(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); adicionar() }
+          if (e.key === 'Escape') fechar()
+        }}
+        onBlur={() => { if (!titulo.trim()) fechar() }}
+      />
+      <div className="linha">
+        <button className="pilula" style={{ padding: '9px 16px' }} onMouseDown={(e) => e.preventDefault()} onClick={adicionar} disabled={!titulo.trim()}>
+          Adicionar
+        </button>
+        <button className="texto2" onMouseDown={(e) => e.preventDefault()} onClick={fechar} aria-label="Cancelar">
+          <Icone nome="x" tamanho={18} />
+        </button>
+        <span className="espaco" />
+        <span className="pequeno texto2">Detalhes depois, no cartão</span>
+      </div>
     </div>
   )
 }

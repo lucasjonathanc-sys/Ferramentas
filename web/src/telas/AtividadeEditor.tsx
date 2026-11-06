@@ -72,7 +72,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       descricao: '',
       prioridade: 1 as Prioridade,
       repeticao: 'nunca' as Repeticao,
-      lembretes: [15],
+      lembretes: tipo === 'compromisso' ? [15] : [],
       local: tipo === 'compromisso' ? enderecoDe(pedido?.clienteId) : '',
       link: '',
       maisOpcoes: false,
@@ -107,6 +107,11 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
 
   function mudarTipo(t: Tipo) {
     setTipo(t)
+    // Atividade nova: lembrete automático (15 min antes) só nos compromissos, se ela ainda não mexeu nos lembretes
+    if (!editando) {
+      const padrao = (x: Tipo) => (x === 'compromisso' ? [15] : [])
+      if (lembretes.join() === padrao(tipo).join()) setLembretes(padrao(t))
+    }
     if (t === 'compromisso') {
       if (!local.trim() && cliente?.endereco.trim()) setLocal(cliente.endereco.trim())
       setTemData(true)

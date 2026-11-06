@@ -200,3 +200,30 @@ export function alternarItemChecklist(atividadeId: string, itemId: string) {
   if (!a) return
   salvarAtividade({ ...a, checklist: a.checklist.map((i) => (i.id === itemId ? { ...i, feito: !i.feito } : i)) })
 }
+
+/** Cria um cartão rápido no quadro: só o título, sem data e sem lembrete. */
+export function criarCartaoRapido(titulo: string, etapa: Exclude<ColunaQuadro, 'feito'>) {
+  const texto = titulo.trim()
+  if (!texto) return
+  salvarAtividade({
+    id: novoId(),
+    tipo: 'tarefa',
+    titulo: texto,
+    descricao: '',
+    contexto: 'China Link',
+    status: 'aberta',
+    prioridade: 1,
+    data: null,
+    temHorario: false,
+    fim: null,
+    repeticao: 'nunca',
+    lembretes: [],
+    local: '',
+    link: '',
+    clienteId: null,
+    criadaEm: new Date().toISOString(),
+    concluidaEm: null,
+    etapa,
+    checklist: [],
+  })
+}
