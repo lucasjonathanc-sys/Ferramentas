@@ -24,6 +24,8 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
+          // Só guarda páginas que vieram certas; se o site estiver fora do ar (404), usa a cópia salva
+          if (!res.ok) return caches.match(ESCOPO).then((salva) => salva || res)
           const copia = res.clone()
           caches.open(CACHE).then((c) => c.put(ESCOPO, copia))
           return res

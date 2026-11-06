@@ -9,7 +9,7 @@ Existem duas versões, com as mesmas telas e a mesma identidade visual:
 
 ## Instalar no iPhone (versão web, grátis)
 
-1. Abra **https://lucasjonathanc-sys.github.io/Ferramentas/** no **Safari** do iPhone.
+1. Abra **https://lucasjonathanc-sys.github.io/&lt;nome-do-repositório&gt;/** no **Safari** do iPhone (ex.: `.../db-organiza/`).
 2. Toque em **Compartilhar** (o quadrado com a seta) e depois em **"Adicionar à Tela de Início"**.
 3. Pronto: o **DB. Organiza** aparece com o ícone **DB.** e abre em tela cheia, como um app.
 
@@ -23,7 +23,7 @@ Existem duas versões, com as mesmas telas e a mesma identidade visual:
 ### Publicação (GitHub Pages)
 
 O workflow `.github/workflows/web-pages.yml` compila o app a cada push e **publica quando o código chega na branch `main`**.
-Para ativar, uma única vez: o repositório precisa ser **público**, e em **Settings → Pages → Build and deployment → Source** é preciso escolher **GitHub Actions**.
+O endereço usa o nome do repositório, que o workflow descobre sozinho: renomear o repositório não exige mudar o código, só reinstalar o app no iPhone (com backup antes). Para ativar, uma única vez: o repositório precisa ser **público**, e em **Settings → Pages → Build and deployment → Source** é preciso escolher **GitHub Actions**.
 
 Para rodar no computador: `cd web && npm install && npm run dev`.
 
