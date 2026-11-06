@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Folha, Logo } from '../componentes/Base'
+import { useApp } from '../contexto'
 import { useEstado, definirNome, exportarBackup, importarBackup, itensAntigos, limparAntigos } from '../store'
 import {
   type Atividade, aberta, corContexto, ehCompromisso, momentoLembrete, nomeLembrete, inicioEm, proximaOcorrencia,
@@ -100,6 +101,7 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
 
 /** Aberta pelo sininho: próximos lembretes dos próximos 14 dias. */
 export function Lembretes({ fechar }: { fechar: () => void }) {
+  const app = useApp()
   const { atividades } = useEstado()
   const agora = Date.now()
   const limite = agora + 14 * 86400000
@@ -129,7 +131,7 @@ export function Lembretes({ fechar }: { fechar: () => void }) {
         <div className="card p12">
           {itens.map(({ a, quando: q, min }, i) => (
             <div key={`${a.id}-${min}`}>
-              <div className="item" style={{ cursor: 'default' }}>
+              <div className="item" onClick={() => app.abrir({ tipo: 'detalhes', id: a.id })}>
                 <span className="bolinha" style={{ background: corContexto(a.contexto), width: 8, height: 8, marginTop: 7 }} />
                 <div>
                   <div className="item-titulo">{a.titulo}</div>

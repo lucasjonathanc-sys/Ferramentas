@@ -7,6 +7,7 @@ import { Tarefas } from './telas/Tarefas'
 import { Agenda } from './telas/Agenda'
 import { Clientes, ClienteEditor } from './telas/Clientes'
 import { AtividadeEditor } from './telas/AtividadeEditor'
+import { AtividadeDetalhes } from './telas/AtividadeDetalhes'
 import { Ajustes, Lembretes } from './telas/Ajustes'
 
 export function App() {
@@ -21,9 +22,14 @@ export function App() {
   let conteudoFolha = null
   if (folha?.tipo === 'nova') {
     conteudoFolha = <AtividadeEditor key={JSON.stringify(folha)} fechar={fechar} pedido={folha} />
+  } else if (folha?.tipo === 'detalhes') {
+    const a = atividades.find((x) => x.id === folha.id)
+    conteudoFolha = a ? <AtividadeDetalhes key={`d-${a.id}`} atividade={a} dia={folha.dia ? new Date(folha.dia) : undefined} fechar={fechar} /> : null
   } else if (folha?.tipo === 'editar') {
     const a = atividades.find((x) => x.id === folha.id)
-    conteudoFolha = a ? <AtividadeEditor key={a.id} fechar={fechar} atividade={a} /> : null
+    // Ao terminar de editar, volta para os detalhes (se veio de lá)
+    const voltar = () => setFolha(folha.voltar ?? null)
+    conteudoFolha = a ? <AtividadeEditor key={a.id} fechar={voltar} atividade={a} /> : null
   } else if (folha?.tipo === 'ajustes') {
     conteudoFolha = <Ajustes fechar={fechar} />
   } else if (folha?.tipo === 'lembretes') {
