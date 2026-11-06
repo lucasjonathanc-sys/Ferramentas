@@ -3,7 +3,7 @@ import { useApp } from '../contexto'
 import { useEstado, alternarConclusao } from '../store'
 import {
   type Atividade, type Contexto, aberta, atrasada, corContexto, dataDe, ehCompromisso, fimEfetivo,
-  inicioEm, proximaOcorrencia,
+  inicioEm, nomeColuna, proximaOcorrencia,
 } from '../modelo'
 import { hora, quando } from '../datas'
 
@@ -40,6 +40,8 @@ const caminhos: Record<string, ReactNode> = {
   pasta: <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" />,
   pincel: <><path d="M14.5 4.5 19.5 9.5 11 18l-5-5z" /><path d="M6 13c-2 0-3 1.5-3 3.5V20h3.5C8.5 20 10 19 10 17" /></>,
   foto: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5-9 9" /></>,
+  'setas-lado': <path d="M7 7h13m-4-4 4 4-4 4M17 17H4m4-4-4 4 4 4" />,
+  checklist: <><rect x="4" y="4" width="16" height="16" rx="3" /><path d="m8 12 3 3 5-6" /></>,
   video: <><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10.5 5-3v9l-5-3" /></>,
   pessoa: <><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5c.8-4 3.8-6.5 7.5-6.5s6.7 2.5 7.5 6.5" /></>,
 }
@@ -301,6 +303,15 @@ export function ItemAtividade({ atividade: a, dia, mostrarData = true }: { ativi
           {a.repeticao !== 'nunca' && <Icone nome="repetir" tamanho={12} />}
           {a.lembretes.length > 0 && aberta(a) && <Icone nome="sino" tamanho={12} />}
           {a.status === 'cancelada' && <span>· Cancelada</span>}
+          {!ehCompromisso(a) && aberta(a) && a.etapa !== 'aFazer' && (
+            <span className="etapa-tag">{nomeColuna(a.etapa)}</span>
+          )}
+          {a.checklist.length > 0 && (
+            <span className="linha" style={{ gap: 3 }}>
+              <Icone nome="checklist" tamanho={12} />
+              {a.checklist.filter((i) => i.feito).length}/{a.checklist.length}
+            </span>
+          )}
         </div>
       </div>
     </div>

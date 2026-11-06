@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Folha, Icone, Segmento, ChipContexto } from '../componentes/Base'
 import { useEstado, salvarAtividade, apagarAtividade, alternarConclusao, alternarCancelamento } from '../store'
 import {
-  type Atividade, type Contexto, type Prioridade, type Repeticao, type Tipo,
+  type Atividade, type Contexto, type Etapa, type ItemChecklist, type Prioridade, type Repeticao, type Tipo,
   CONTEXTOS, OPCOES_LEMBRETE, PRIORIDADES, REPETICOES, comHora, ehHoje, fimEfetivo, inicioDoDia, nomeLembrete, novoId, somarDias,
 } from '../modelo'
 import { deInputData, deInputHora, paraInputData, paraInputHora } from '../datas'
@@ -12,7 +12,7 @@ import { CartaoCliente } from '../componentes/Cliente'
 interface Props {
   fechar: () => void
   atividade?: Atividade
-  pedido?: { atividadeTipo?: Tipo; data?: Date; temHorario?: boolean; clienteId?: string }
+  pedido?: { atividadeTipo?: Tipo; data?: Date; temHorario?: boolean; clienteId?: string; etapa?: Etapa }
 }
 
 function proximaHoraCheia(dia: Date): Date {
@@ -51,6 +51,8 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
         local: atividade.local,
         link: atividade.link,
         maisOpcoes: !!atividade.descricao || atividade.repeticao !== 'nunca' || !!atividade.local || !!atividade.link,
+        etapa: atividade.etapa,
+        checklist: atividade.checklist,
       }
     }
     const tipo: Tipo = pedido?.atividadeTipo ?? 'tarefa'
@@ -74,6 +76,8 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       local: tipo === 'compromisso' ? enderecoDe(pedido?.clienteId) : '',
       link: '',
       maisOpcoes: false,
+      etapa: (pedido?.etapa ?? 'aFazer') as Etapa,
+      checklist: [] as ItemChecklist[],
     }
   }, [atividade, pedido])
 
@@ -93,6 +97,8 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
   const [lembretes, setLembretes] = useState<number[]>(inicial.lembretes)
   const [local, setLocal] = useState(inicial.local)
   const [link, setLink] = useState(inicial.link)
+  const [checklist, setChecklist] = useState<ItemChecklist[]>(inicial.checklist)
+  const [novoItem, setNovoItem] = useState('')
 
   const ehCompromisso = tipo === 'compromisso'
   const podeSalvar = titulo.trim().length > 0
@@ -157,12 +163,16 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       clienteId,
       criadaEm: atividade?.criadaEm ?? new Date().toISOString(),
       concluidaEm: atividade?.concluidaEm ?? null,
+      etapa: inicial.etapa,
+      checklist: ehCompromisso ? checklist.filter((i) => i.texto.trim()) : (atividade?.checklist ?? []),
     }
   }
 
   function salvar() {
     if (!podeSalvar) return
-    salvarAtividade(montar())
+    const a = montar()
+    if (ehCompromisso && novoItem.trim()) a.checklist = [...a.checklist, { id: novoId(), texto: novoItem.trim(), feito: false }]
+    salvarAtividade(a)
     fechar()
   }
 
@@ -293,6 +303,46 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
         </label>
         {cliente && <div style={{ marginTop: 10 }}><CartaoCliente cliente={cliente} /></div>}
       </div>
+
+      {ehCompromisso && (
+        <div>
+          {rotulo('Checklist', true)}
+          <div className="card checklist-editor">
+            {checklist.map((item) => (
+              <div key={item.id} className="checklist-item">
+                <button
+                  className={`check pequeno-check ${item.feito ? 'feito' : ''}`}
+                  onClick={() => setChecklist(checklist.map((i) => (i.id === item.id ? { ...i, feito: !i.feito } : i)))}
+                  aria-label={item.feito ? 'Desmarcar' : 'Marcar como feito'}
+                >
+                  {item.feito && <Icone nome="check" tamanho={12} peso={2.4} />}
+                </button>
+                <input
+                  value={item.texto}
+                  onChange={(e) => setChecklist(checklist.map((i) => (i.id === item.id ? { ...i, texto: e.target.value } : i)))}
+                  className={item.feito ? 'riscado' : ''}
+                />
+                <button className="texto2" onClick={() => setChecklist(checklist.filter((i) => i.id !== item.id))} aria-label="Remover item">
+                  <Icone nome="x" tamanho={14} />
+                </button>
+              </div>
+            ))}
+            <form
+              className="checklist-item"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const texto = novoItem.trim()
+                if (!texto) return
+                setChecklist([...checklist, { id: novoId(), texto, feito: false }])
+                setNovoItem('')
+              }}
+            >
+              <span className="texto2" style={{ width: 22, display: 'grid', placeItems: 'center' }}><Icone nome="mais" tamanho={16} /></span>
+              <input value={novoItem} onChange={(e) => setNovoItem(e.target.value)} placeholder="Adicionar item (ex.: levar referências)" enterKeyHint="done" />
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="pilha-p">
         <button className="campo" onClick={() => setMaisOpcoes(!maisOpcoes)}>

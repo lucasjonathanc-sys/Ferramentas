@@ -1,7 +1,7 @@
 // Estado do app, salvo no próprio iPhone (localStorage).
 import { useSyncExternalStore } from 'react'
 import {
-  type Atividade, type Cliente, aberta, dataDe, ehCompromisso, normalizarCliente, novoId, proximaData,
+  type Atividade, type Cliente, type ColunaQuadro, aberta, dataDe, ehCompromisso, normalizarAtividade, normalizarCliente, novoId, proximaData,
 } from './modelo'
 
 const CHAVE = 'hb-organiza-v1'
@@ -20,7 +20,7 @@ function carregar(): Estado {
     if (!bruto) return vazio
     const dados = JSON.parse(bruto)
     return {
-      atividades: Array.isArray(dados.atividades) ? dados.atividades : [],
+      atividades: Array.isArray(dados.atividades) ? dados.atividades.map(normalizarAtividade) : [],
       clientes: Array.isArray(dados.clientes) ? dados.clientes.map(normalizarCliente) : [],
       nome: typeof dados.nome === 'string' ? dados.nome : 'Hanna',
     }
@@ -91,6 +91,7 @@ export function alternarConclusao(id: string) {
       ...a,
       id: novoId(),
       status: 'aberta',
+      etapa: 'aFazer',
       data: proxima.toISOString(),
       criadaEm: new Date().toISOString(),
       concluidaEm: null,
@@ -164,7 +165,7 @@ export function importarBackup(texto: string): boolean {
     const dados = JSON.parse(texto)
     if (!Array.isArray(dados.atividades) || !Array.isArray(dados.clientes)) return false
     definir({
-      atividades: dados.atividades,
+      atividades: dados.atividades.map(normalizarAtividade),
       clientes: dados.clientes.map(normalizarCliente),
       nome: typeof dados.nome === 'string' ? dados.nome : estado.nome,
     })
@@ -180,4 +181,22 @@ export function alternarPagamento(clienteId: string, mes: string) {
   if (!c) return
   const pagamentos = c.pagamentos.includes(mes) ? c.pagamentos.filter((m) => m !== mes) : [...c.pagamentos, mes]
   salvarCliente({ ...c, pagamentos })
+}
+
+/** Move a tarefa para uma coluna do quadro. "Feito" conclui; sair de "Feito" reabre. */
+export function moverParaColuna(id: string, coluna: ColunaQuadro) {
+  const a = estado.atividades.find((x) => x.id === id)
+  if (!a || ehCompromisso(a)) return
+  if (coluna === 'feito') {
+    if (a.status !== 'concluida') alternarConclusao(id)
+    return
+  }
+  salvarAtividade({ ...a, etapa: coluna, status: 'aberta', concluidaEm: null })
+}
+
+/** Marca ou desmarca um item do checklist de um compromisso. */
+export function alternarItemChecklist(atividadeId: string, itemId: string) {
+  const a = estado.atividades.find((x) => x.id === atividadeId)
+  if (!a) return
+  salvarAtividade({ ...a, checklist: a.checklist.map((i) => (i.id === itemId ? { ...i, feito: !i.feito } : i)) })
 }

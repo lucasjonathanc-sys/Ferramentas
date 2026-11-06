@@ -5,6 +5,24 @@ export type Tipo = 'tarefa' | 'compromisso'
 export type Status = 'aberta' | 'concluida' | 'cancelada'
 export type Prioridade = 0 | 1 | 2
 export type Repeticao = 'nunca' | 'diaria' | 'diasUteis' | 'semanal' | 'mensal' | 'anual'
+/** Etapa da tarefa no quadro (estilo Trello). "Feito" é a tarefa concluída. */
+export type Etapa = 'aFazer' | 'fazendo' | 'aprovacao'
+export type ColunaQuadro = Etapa | 'feito'
+
+export const COLUNAS: { valor: ColunaQuadro; nome: string }[] = [
+  { valor: 'aFazer', nome: 'A fazer' },
+  { valor: 'fazendo', nome: 'Fazendo' },
+  { valor: 'aprovacao', nome: 'Em aprovação' },
+  { valor: 'feito', nome: 'Feito' },
+]
+
+export const nomeColuna = (c: ColunaQuadro) => COLUNAS.find((x) => x.valor === c)?.nome ?? ''
+
+export interface ItemChecklist {
+  id: string
+  texto: string
+  feito: boolean
+}
 
 export const CONTEXTOS: { nome: Contexto; cor: string }[] = [
   { nome: 'China Link', cor: 'var(--vinho)' },
@@ -68,7 +86,26 @@ export interface Atividade {
   clienteId: string | null
   criadaEm: string
   concluidaEm: string | null
+  /** Etapa da tarefa aberta no quadro. */
+  etapa: Etapa
+  /** Checklist do compromisso. */
+  checklist: ItemChecklist[]
 }
+
+/** Completa atividades salvas em versões antigas com os campos novos. */
+export function normalizarAtividade(a: Atividade): Atividade {
+  const etapas: Etapa[] = ['aFazer', 'fazendo', 'aprovacao']
+  return {
+    ...a,
+    etapa: etapas.includes(a.etapa) ? a.etapa : 'aFazer',
+    checklist: Array.isArray(a.checklist)
+      ? a.checklist.filter((i) => i && typeof i.texto === 'string').map((i) => ({ id: i.id || novoId(), texto: i.texto, feito: !!i.feito }))
+      : [],
+  }
+}
+
+/** Coluna do quadro em que a tarefa aparece. */
+export const colunaDe = (a: Atividade): ColunaQuadro => (a.status === 'concluida' ? 'feito' : a.etapa)
 
 export interface Cliente {
   id: string
