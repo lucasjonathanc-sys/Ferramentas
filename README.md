@@ -1,6 +1,32 @@
-# Organiza 💜
+# HB Organiza 💜
 
-App de iOS (SwiftUI + SwiftData) para organizar a rotina de quem trabalha como **copywriter na China Link** e faz **social media freela** (vídeo, design, posts) para pequenas empresas.
+App para organizar a rotina de quem trabalha como **copywriter na China Link** e faz **social media freela** (vídeo, design, posts) para pequenas empresas.
+
+Existem duas versões, com as mesmas telas e a mesma identidade visual:
+
+- **`web/`: app web instalável (PWA), a versão usada no iPhone.** É grátis, não expira e não precisa de Mac.
+- **`Organiza/`: app nativo em SwiftUI.** Fica guardado para o futuro e precisa de Mac/Xcode e de conta Apple para instalar.
+
+## Instalar no iPhone (versão web, grátis)
+
+1. Abra **https://lucasjonathanc-sys.github.io/Ferramentas/** no **Safari** do iPhone.
+2. Toque em **Compartilhar** (o quadrado com a seta) e depois em **"Adicionar à Tela de Início"**.
+3. Pronto: o **HB Organiza** aparece com o ícone **DB.** e abre em tela cheia, como um app.
+
+- Os dados ficam salvos **só no iPhone**. Em **Ajustes → Salvar backup** dá para guardar uma cópia no app Arquivos ou no iCloud Drive.
+- Para receber os **lembretes com o app fechado**, abra a atividade e toque em **"Adicionar ao Calendário do iPhone"**. Os alarmes vão junto e quem avisa é o Calendário.
+- Funciona sem internet depois da primeira abertura.
+
+### Publicação (GitHub Pages)
+
+O workflow `.github/workflows/web-pages.yml` compila o app a cada push e **publica quando o código chega na branch `main`**.
+Para ativar, uma única vez: o repositório precisa ser **público**, e em **Settings → Pages → Build and deployment → Source** é preciso escolher **GitHub Actions**.
+
+Para rodar no computador: `cd web && npm install && npm run dev`.
+
+---
+
+# Versão nativa (SwiftUI)
 
 ## O que o app faz
 
