@@ -205,6 +205,21 @@ function ClienteDetalhe({ cliente: c, voltar }: { cliente: Cliente; voltar: () =
 
 // MARK: - Cadastro / edição
 
+/** Seção do cadastro que abre e fecha, para o formulário ficar curto. */
+function Recolhivel({ titulo, preenchidos, children }: { titulo: string; preenchidos: number; children: ReactNode }) {
+  const [aberta, setAberta] = useState(false)
+  return (
+    <div>
+      <button className={`recolhivel ${aberta ? 'aberta' : ''}`} onClick={() => setAberta(!aberta)} aria-expanded={aberta}>
+        <span style={{ flex: 1 }}>{titulo}</span>
+        <span className="pequeno texto2">{preenchidos ? `${preenchidos} preenchido${preenchidos === 1 ? '' : 's'}` : 'Opcional'}</span>
+        <span className="texto2"><Icone nome={aberta ? 'cima' : 'baixo'} tamanho={16} /></span>
+      </button>
+      {aberta && <div style={{ marginTop: 10 }}>{children}</div>}
+    </div>
+  )
+}
+
 function Campo(props: {
   rotulo: string
   valor: string
@@ -246,6 +261,7 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
     definir: (v: string) => setF((x) => ({ ...x, [k]: v })),
   })
   const podeSalvar = f.nome.trim().length > 0
+  const contar = (chaves: (keyof Cliente)[]) => chaves.filter((k) => String(f[k] ?? '').trim()).length
 
   function salvar() {
     if (!podeSalvar) return
@@ -295,8 +311,7 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
         </div>
       </div>
 
-      <div>
-        <p className="grupo-titulo">Contato</p>
+      <Recolhivel titulo="Contato" preenchidos={contar(['responsavel', 'contato', 'email', 'instagram', 'tiktok', 'site', 'endereco'])}>
         <div className="grupo">
           <Campo rotulo="Responsável" {...campo('responsavel')} placeholder="Com quem você fala" />
           <Campo rotulo="WhatsApp" {...campo('contato')} placeholder="(11) 99999-9999" tipo="tel" modo="tel" />
@@ -307,20 +322,18 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
           <Campo rotulo="Endereço" {...campo('endereco')} placeholder="Rua, número, bairro, cidade" multilinha />
         </div>
         <p className="grupo-nota">O endereço já entra no Local quando você cria um compromisso com este cliente.</p>
-      </div>
+      </Recolhivel>
 
-      <div>
-        <p className="grupo-titulo">Contrato e pagamento</p>
+      <Recolhivel titulo="Contrato e pagamento" preenchidos={contar(['servicos', 'inicioContrato']) + (valor.trim() ? 1 : 0) + (dia.trim() ? 1 : 0)}>
         <div className="grupo">
           <Campo rotulo="Serviços" {...campo('servicos')} placeholder="Ex.: 12 posts e 4 vídeos por mês" multilinha />
           <Campo rotulo="Valor mensal" valor={valor} definir={setValor} placeholder="R$ 0,00" modo="decimal" />
           <Campo rotulo="Dia de pagamento" valor={dia} definir={setDia} placeholder="Ex.: 10" modo="numeric" />
           <Campo rotulo="Início do contrato" {...campo('inicioContrato')} tipo="date" />
         </div>
-      </div>
+      </Recolhivel>
 
-      <div>
-        <p className="grupo-titulo">Identidade da marca</p>
+      <Recolhivel titulo="Identidade da marca" preenchidos={contar(['cores', 'fontes', 'tomDeVoz', 'publicoAlvo', 'diasPostagem', 'linkDrive', 'linkCanva', 'linkFotos'])}>
         <div className="grupo">
           <Campo rotulo="Cores" {...campo('cores')} placeholder="Ex.: rosa #F4A6B8, marrom" />
           <Campo rotulo="Fontes" {...campo('fontes')} placeholder="Ex.: Playfair e Montserrat" />
@@ -331,16 +344,15 @@ export function ClienteEditor({ cliente, fechar }: { cliente?: Cliente; fechar: 
           <Campo rotulo="Canva" {...campo('linkCanva')} placeholder="Link do Canva" modo="url" />
           <Campo rotulo="Fotos" {...campo('linkFotos')} placeholder="Link das fotos" modo="url" />
         </div>
-      </div>
+      </Recolhivel>
 
-      <div>
-        <p className="grupo-titulo">Observações</p>
+      <Recolhivel titulo="Observações" preenchidos={contar(['observacoes'])}>
         <div className="grupo">
           <label className="grupo-linha">
             <textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} placeholder="Anotações gerais sobre o cliente" />
           </label>
         </div>
-      </div>
+      </Recolhivel>
 
       {cliente && (
         <div>

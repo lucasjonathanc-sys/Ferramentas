@@ -46,7 +46,8 @@ export function gerarICS(a: Atividade, cliente?: Cliente | null): string | null 
   const titulo = a.tipo === 'tarefa' ? `✓ ${a.titulo}` : a.titulo
   linhas.push(`SUMMARY:${escapar(titulo)}`)
 
-  const partes = [a.contexto, cliente?.nome, a.descricao, a.link].filter(Boolean) as string[]
+  const lista = a.checklist.map((i) => `${i.feito ? '☑' : '☐'} ${i.texto}`).join('\n')
+  const partes = [a.contexto, cliente?.nome, a.descricao, lista, a.link].filter(Boolean) as string[]
   if (partes.length) linhas.push(`DESCRIPTION:${escapar(partes.join('\n'))}`)
   if (a.local) linhas.push(`LOCATION:${escapar(a.local)}`)
   if (a.link) linhas.push(`URL:${a.link.startsWith('http') ? a.link : `https://${a.link}`}`)

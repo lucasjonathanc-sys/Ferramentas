@@ -1,10 +1,10 @@
 import { Fragment, type ReactNode } from 'react'
 import { useApp } from '../contexto'
-import { useEstado, alternarConclusao, alternarCancelamento, apagarAtividade } from '../store'
-import { Folha, Icone } from '../componentes/Base'
+import { useEstado, alternarConclusao, alternarCancelamento, apagarAtividade, alternarItemChecklist, moverParaColuna } from '../store'
+import { Folha, Icone, Segmento } from '../componentes/Base'
 import { CartaoCliente } from '../componentes/Cliente'
 import {
-  type Atividade, REPETICOES, atrasada, corContexto, dataDe, ehCompromisso, fimEfetivo, inicioEm,
+  type Atividade, type ColunaQuadro, COLUNAS, REPETICOES, atrasada, colunaDe, corContexto, dataDe, ehCompromisso, fimEfetivo, inicioEm,
   nomeLembrete, proximaOcorrencia,
 } from '../modelo'
 import { dataPorExtenso, hora } from '../datas'
@@ -147,6 +147,36 @@ export function AtividadeDetalhes({ atividade: a, dia, fechar }: { atividade: At
           </div>
         )}
       </div>
+
+      {!compromisso && a.status !== 'cancelada' && (
+        <div>
+          <span className="rotulo">Etapa</span>
+          <Segmento
+            opcoes={COLUNAS.map((c) => ({ valor: c.valor, titulo: c.valor === 'aprovacao' ? 'Aprovação' : c.nome }))}
+            valor={colunaDe(a)}
+            definir={(c: ColunaQuadro) => moverParaColuna(a.id, c)}
+          />
+        </div>
+      )}
+
+      {a.checklist.length > 0 && (
+        <div>
+          <div className="linha" style={{ marginBottom: 8 }}>
+            <span className="rotulo" style={{ margin: 0, flex: 1 }}>Checklist</span>
+            <span className="pequeno texto2">{a.checklist.filter((i) => i.feito).length} de {a.checklist.length}</span>
+          </div>
+          <div className="card checklist-editor">
+            {a.checklist.map((item) => (
+              <button key={item.id} className="checklist-item" style={{ width: '100%', textAlign: 'left' }} onClick={() => alternarItemChecklist(a.id, item.id)}>
+                <span className={`check pequeno-check ${item.feito ? 'feito' : ''}`}>
+                  {item.feito && <Icone nome="check" tamanho={12} peso={2.4} />}
+                </span>
+                <span className={item.feito ? 'riscado' : ''} style={{ flex: 1 }}>{item.texto}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {a.descricao.trim() && (
         <div>
