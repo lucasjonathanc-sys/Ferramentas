@@ -12,7 +12,6 @@ struct TarefasView: View {
     @State private var busca = ""
     @State private var status: FiltroStatus = .abertas
     @State private var tipo: FiltroTipo = .todas
-    @State private var contexto: Contexto?
 
     private let cal = Calendar.current
 
@@ -30,12 +29,11 @@ struct TarefasView: View {
             case .soTarefas: passaTipo = !a.ehCompromisso
             case .soCompromissos: passaTipo = a.ehCompromisso
             }
-            let passaContexto = contexto == nil || a.contexto == contexto
             let passaBusca = busca.isEmpty
                 || a.titulo.localizedCaseInsensitiveContains(busca)
                 || a.descricao.localizedCaseInsensitiveContains(busca)
                 || (a.cliente?.nome.localizedCaseInsensitiveContains(busca) ?? false)
-            return passaStatus && passaTipo && passaContexto && passaBusca
+            return passaStatus && passaTipo && passaBusca
         }
     }
 
@@ -131,16 +129,6 @@ struct TarefasView: View {
                     }
                     FiltroChip(titulo: "Só compromissos", ativo: tipo == .soCompromissos) {
                         tipo = tipo == .soCompromissos ? .todas : .soCompromissos
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(Contexto.allCases) { c in
-                        ContextoChip(contexto: c, ativo: contexto == c) {
-                            withAnimation(.snappy) { contexto = contexto == c ? nil : c }
-                        }
                     }
                 }
                 .padding(.horizontal, 20)

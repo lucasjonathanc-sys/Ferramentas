@@ -26,9 +26,6 @@ struct AtividadeEditor: View {
     @State private var lembretes: [Int] = [15]
     @State private var local = ""
     @State private var link = ""
-    @State private var trabalho: TipoTrabalho = .nenhum
-    @State private var etapas: [EtapaRascunho] = []
-    @State private var novaEtapa = ""
     @State private var carregado = false
     @State private var confirmarExclusao = false
     @FocusState private var focoTitulo: Bool
@@ -300,9 +297,6 @@ struct AtividadeEditor: View {
                     .campo()
                     .padding(.top, -8)
 
-                if !ehCompromisso {
-                    trabalhoEEtapas
-                }
             }
         }
     }
@@ -342,65 +336,6 @@ struct AtividadeEditor: View {
                 .overlay(Capsule().stroke(Theme.borda, lineWidth: 1))
             }
         }
-    }
-
-    @ViewBuilder
-    private var trabalhoEEtapas: some View {
-        rotulo("Tipo de trabalho", opcional: true)
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(TipoTrabalho.allCases) { t in
-                    FiltroChip(titulo: t.rawValue, ativo: trabalho == t) {
-                        withAnimation(.snappy) { trabalho = t }
-                    }
-                }
-            }
-        }
-        .padding(.top, -8)
-
-        rotulo("Etapas", opcional: true)
-        VStack(alignment: .leading, spacing: 10) {
-            ForEach($etapas) { $etapa in
-                HStack(spacing: 10) {
-                    Button { etapa.feita.toggle() } label: {
-                        Image(systemName: etapa.feita ? "checkmark.square.fill" : "square")
-                            .foregroundStyle(etapa.feita ? Theme.acento : Color.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    TextField("Etapa", text: $etapa.titulo)
-                        .strikethrough(etapa.feita)
-                    Button {
-                        let id = etapa.id
-                        withAnimation { etapas.removeAll { $0.id == id } }
-                    } label: {
-                        Image(systemName: "minus.circle").foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            HStack(spacing: 10) {
-                Image(systemName: "plus").foregroundStyle(.secondary)
-                TextField("Adicionar etapa", text: $novaEtapa)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        let texto = novaEtapa.trimmingCharacters(in: .whitespaces)
-                        guard !texto.isEmpty else { return }
-                        withAnimation { etapas.append(EtapaRascunho(titulo: texto)) }
-                        novaEtapa = ""
-                    }
-            }
-            if etapas.isEmpty && !trabalho.etapasSugeridas.isEmpty {
-                Button {
-                    withAnimation { etapas = trabalho.etapasSugeridas.map { EtapaRascunho(titulo: $0) } }
-                } label: {
-                    Label("Usar etapas sugeridas para \(trabalho.rawValue)", systemImage: "wand.and.stars")
-                        .font(Fonte.texto(15))
-                }
-                .tint(Color.primary)
-            }
-        }
-        .campo()
-        .padding(.top, -8)
     }
 
     private func acoesDeStatus(_ a: Atividade) -> some View {
@@ -502,10 +437,8 @@ struct AtividadeEditor: View {
             lembretes = a.lembretes
             local = a.local
             link = a.link
-            trabalho = a.trabalho
-            etapas = a.etapasOrdenadas.map { EtapaRascunho(titulo: $0.titulo, feita: $0.feita) }
             // abre "Mais opções" se algo lá estiver preenchido
-            maisOpcoes = !descricao.isEmpty || repeticao != .nunca || !etapas.isEmpty || !local.isEmpty || !link.isEmpty
+            maisOpcoes = !descricao.isEmpty || repeticao != .nunca || !local.isEmpty || !link.isEmpty
         } else {
             let p = pedido ?? NovaAtividadePedido()
             tipo = p.tipo
@@ -545,7 +478,6 @@ struct AtividadeEditor: View {
         a.lembretes = lembretes.sorted()
         a.local = ehCompromisso ? local : ""
         a.link = ehCompromisso ? link : ""
-        a.trabalho = ehCompromisso ? .nenhum : trabalho
 
         if temData || ehCompromisso {
             if temHorario || ehCompromisso {
@@ -572,18 +504,6 @@ struct AtividadeEditor: View {
             a.fim = nil
         }
 
-        // Recria as etapas a partir do rascunho
-        for antiga in a.etapas ?? [] { context.delete(antiga) }
-        a.etapas = []
-        if !ehCompromisso {
-            let validas = etapas.filter { !$0.titulo.trimmingCharacters(in: .whitespaces).isEmpty }
-            for (i, r) in validas.enumerated() {
-                let e = Etapa(titulo: r.titulo, feita: r.feita, ordem: i)
-                context.insert(e)
-                e.atividade = a
-            }
-        }
-
         try? context.save()
         Notificacoes.atualizar(a)
         if fechar { dismiss() }
@@ -597,10 +517,4 @@ struct AtividadeEditor: View {
         }
         return cal.date(bySettingHour: 9, minute: 0, second: 0, of: dia) ?? dia
     }
-}
-
-struct EtapaRascunho: Identifiable {
-    let id = UUID()
-    var titulo: String
-    var feita: Bool = false
 }

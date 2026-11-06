@@ -17,7 +17,7 @@ struct OrganizaApp: App {
             RootView()
                 .environment(\.locale, Fmt.locale)
         }
-        .modelContainer(for: [Atividade.self, Etapa.self, Cliente.self])
+        .modelContainer(for: [Atividade.self, Cliente.self])
     }
 }
 

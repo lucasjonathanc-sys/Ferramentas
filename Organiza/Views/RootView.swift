@@ -48,5 +48,5 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .modelContainer(for: [Atividade.self, Etapa.self, Cliente.self], inMemory: true)
+        .modelContainer(for: [Atividade.self, Cliente.self], inMemory: true)
 }

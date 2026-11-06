@@ -450,14 +450,6 @@ struct AtividadeRow: View {
                 .font(Fonte.texto(12))
                 .foregroundStyle(.secondary)
 
-                if let progresso = atividade.progressoEtapas, atividade.aberta {
-                    HStack(spacing: 8) {
-                        ProgressView(value: progresso).tint(atividade.contexto.cor)
-                        Text("\((atividade.etapas ?? []).filter(\.feita).count)/\(atividade.etapas?.count ?? 0)")
-                            .font(Fonte.texto(11).monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                }
             }
         }
         .padding(.vertical, 6)

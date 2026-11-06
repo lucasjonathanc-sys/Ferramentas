@@ -7,7 +7,7 @@ import SwiftUI
 /// Área da vida a que a atividade pertence (os chips com bolinha colorida).
 enum Contexto: String, CaseIterable, Identifiable {
     case chinaLink = "China Link"
-    case freela = "Freela"
+    case freela = "Clientes"
     case pessoal = "Pessoal"
     case faculdade = "Faculdade"
     case igreja = "Igreja"
@@ -140,46 +140,6 @@ enum OpcoesLembrete {
     }
 }
 
-/// Tipo de trabalho de marketing (opcional, em "Mais opções").
-enum TipoTrabalho: String, CaseIterable, Identifiable {
-    case nenhum = "Nenhum"
-    case copy = "Copy"
-    case roteiro = "Roteiro"
-    case video = "Vídeo"
-    case design = "Design"
-    case post = "Post"
-    case stories = "Stories"
-    case planejamento = "Planejamento"
-
-    var id: String { rawValue }
-
-    var icone: String {
-        switch self {
-        case .nenhum: return "circle.dashed"
-        case .copy: return "text.quote"
-        case .roteiro: return "doc.text"
-        case .video: return "video"
-        case .design: return "paintpalette"
-        case .post: return "square.grid.3x3"
-        case .stories: return "circle.dashed"
-        case .planejamento: return "calendar.badge.clock"
-        }
-    }
-
-    var etapasSugeridas: [String] {
-        switch self {
-        case .nenhum: return []
-        case .copy: return ["Ler briefing", "Pesquisa", "Rascunho", "Revisão", "Enviar p/ aprovação"]
-        case .roteiro: return ["Ideia / gancho", "Estrutura", "Escrever roteiro", "Aprovação"]
-        case .video: return ["Roteiro", "Gravação", "Edição", "Legenda + capa", "Aprovação", "Postar"]
-        case .design: return ["Briefing", "Referências", "Criação", "Ajustes", "Aprovação", "Exportar"]
-        case .post: return ["Arte", "Legenda", "Hashtags", "Aprovação", "Agendar / postar"]
-        case .stories: return ["Captar conteúdo", "Montar sequência", "Postar"]
-        case .planejamento: return ["Levantar datas", "Definir pautas", "Montar calendário", "Apresentar"]
-        }
-    }
-}
-
 // MARK: - Modelos (SwiftData)
 
 @Model
@@ -241,13 +201,9 @@ final class Atividade {
     var lembretes: [Int] = []
     var local: String = ""
     var link: String = ""
-    var trabalhoRaw: String = TipoTrabalho.nenhum.rawValue
     var criadaEm: Date = Date()
     var concluidaEm: Date?
     var cliente: Cliente?
-
-    @Relationship(deleteRule: .cascade, inverse: \Etapa.atividade)
-    var etapas: [Etapa]? = []
 
     init(tipo: TipoAtividade = .tarefa, titulo: String = "") {
         self.tipoRaw = tipo.rawValue
@@ -279,11 +235,6 @@ final class Atividade {
         set { repeticaoRaw = newValue.rawValue }
     }
 
-    var trabalho: TipoTrabalho {
-        get { TipoTrabalho(rawValue: trabalhoRaw) ?? .nenhum }
-        set { trabalhoRaw = newValue.rawValue }
-    }
-
     var ehCompromisso: Bool { tipo == .compromisso }
     var aberta: Bool { status == .aberta }
 
@@ -310,16 +261,6 @@ final class Atividade {
     var jaPassou: Bool {
         guard ehCompromisso, repeticao == .nunca, let fim = fimEfetivo else { return false }
         return fim < Date()
-    }
-
-    var etapasOrdenadas: [Etapa] {
-        (etapas ?? []).sorted { $0.ordem < $1.ordem }
-    }
-
-    var progressoEtapas: Double? {
-        let todas = etapas ?? []
-        guard !todas.isEmpty else { return nil }
-        return Double(todas.filter(\.feita).count) / Double(todas.count)
     }
 
     /// Se a atividade aparece no dia (considerando repetição de compromissos).
@@ -369,20 +310,6 @@ final class Atividade {
     }
 }
 
-@Model
-final class Etapa {
-    var titulo: String = ""
-    var feita: Bool = false
-    var ordem: Int = 0
-    var atividade: Atividade?
-
-    init(titulo: String, feita: Bool = false, ordem: Int = 0) {
-        self.titulo = titulo
-        self.feita = feita
-        self.ordem = ordem
-    }
-}
-
 // MARK: - Ações
 
 enum Acoes {
@@ -410,14 +337,8 @@ enum Acoes {
             nova.lembretes = a.lembretes
             nova.local = a.local
             nova.link = a.link
-            nova.trabalho = a.trabalho
             nova.cliente = a.cliente
             context.insert(nova)
-            for (i, e) in a.etapasOrdenadas.enumerated() {
-                let etapa = Etapa(titulo: e.titulo, feita: false, ordem: i)
-                context.insert(etapa)
-                etapa.atividade = nova
-            }
             // a concluída deixa de repetir; quem repete agora é a nova
             a.repeticao = .nunca
             Notificacoes.atualizar(nova)

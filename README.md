@@ -9,12 +9,12 @@ Visual da identidade **Dulce Berdulles**: off-white `#F6F4EF`, preto `#0B0B0B`, 
 | Aba | Para quê |
 |---|---|
 | **Hoje** | "Bom dia, Hanna", progresso do dia, agenda de hoje, atrasadas, o que vence hoje e os próximos dias |
-| **Tarefas** | Busca + filtros Abertas / Concluídas / Canceladas / Só tarefas / Só compromissos e por contexto; agrupado por Atrasadas, Hoje, Amanhã, Próximos 7 dias... Deslize para concluir, cancelar ou apagar |
-| **+ (centro)** | "Nova atividade": Tarefa ou Compromisso, vencimento e horário opcionais, contexto, cliente e "Mais opções" (prioridade, repetição, vários lembretes, descrição, local/link, tipo de trabalho e etapas) |
+| **Tarefas** | Busca + filtros Abertas / Concluídas / Canceladas / Só tarefas / Só compromissos; agrupado por Atrasadas, Hoje, Amanhã, Próximos 7 dias... Deslize para concluir, cancelar ou apagar |
+| **+ (centro)** | "Nova atividade": Tarefa ou Compromisso, vencimento e horário opcionais, contexto, cliente e "Mais opções" (prioridade, repetição, vários lembretes, descrição e, nos compromissos, local e link) |
 | **Agenda** | Dia / Semana (3 dias) / Mês, linha do tempo por hora com a hora atual marcada e faixa "Sem hora". Toque num horário vazio para criar um compromisso |
 | **Clientes** | Ativos / Arquivados, busca, renda extra mensal e todas as atividades de cada cliente |
 
-Contextos: **China Link, Freela, Pessoal, Faculdade e Igreja**.
+Contextos: **China Link, Clientes, Pessoal, Faculdade e Igreja**.
 
 O sininho mostra os próximos lembretes e o avatar abre os Ajustes (nome, notificações, limpeza de itens antigos).
 
@@ -35,7 +35,7 @@ Precisa de um **Mac com Xcode 16 ou mais novo** (o projeto usa pastas sincroniza
 ```
 Organiza/
 ├── App/          OrganizaApp, Theme (cores/datas), Notificacoes
-├── Models/       Atividade, Etapa, Cliente (SwiftData), enums e ações
+├── Models/       Atividade, Cliente (SwiftData), enums e ações
 ├── Fonts/        Playfair Display, Montserrat e Inter (licença OFL em LicencasFontes/)
 ├── Components/   Cabeçalho, barra de abas, chips, linha de atividade
 ├── Views/        Hoje, Tarefas, Agenda, Clientes, Nova atividade, Ajustes
