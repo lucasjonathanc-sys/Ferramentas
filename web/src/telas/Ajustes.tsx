@@ -6,6 +6,7 @@ import {
   type Atividade, aberta, corContexto, ehCompromisso, momentoLembrete, nomeLembrete, inicioEm, proximaOcorrencia,
 } from '../modelo'
 import { paraInputData, quando } from '../datas'
+import { SecaoSincronizacao } from './Sincronizacao'
 
 export function Ajustes({ fechar }: { fechar: () => void }) {
   const estado = useEstado()
@@ -58,6 +59,8 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
           <div className="pequeno texto2">Feito com carinho para a {estado.nome.trim() || 'Hanna'} 🤍</div>
         </div>
       </div>
+
+      <SecaoSincronizacao />
 
       <div>
         <p className="grupo-titulo">Como te chamar</p>

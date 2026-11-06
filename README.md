@@ -23,6 +23,17 @@ Existem duas versões, com as mesmas telas e a mesma identidade visual:
 - **Clientes (CRM):** cada cliente tem um perfil com contato, contrato/pagamento e identidade da marca. Ao escolher o cliente numa tarefa ou compromisso, aparece o resumo do perfil com atalhos (WhatsApp, Instagram, Drive...), e nos compromissos o endereço já entra no Local.
 - Funciona sem internet depois da primeira abertura.
 
+### Sincronização entre iPhones (Firebase)
+
+Com login, os dados ficam também na nuvem (Firebase, plano grátis) e os dois iPhones se atualizam ao vivo. Sem internet, o app continua funcionando e envia as mudanças quando a conexão voltar.
+
+1. No Firebase: crie o projeto, ative **Authentication → E-mail/senha**, crie o usuário dela e crie o **Firestore** (região `southamerica-east1`).
+2. Em **Firestore → Regras**, cole o conteúdo de `web/firestore.rules` e publique. Assim, cada pessoa só acessa os próprios dados.
+3. Cole a configuração do app web em `web/src/firebaseConfig.ts` (a constante `configuracao`). Ela pode ficar pública.
+4. No app: **Ajustes → Sincronização → Entrar**, nos dois iPhones.
+
+Para testar no computador com os emuladores: `firebase emulators:start --only auth,firestore --project demo-db-organiza` (na pasta `web/`) e `VITE_FIREBASE_EMULADOR=1 npm run dev`.
+
 ### Publicação (GitHub Pages)
 
 O workflow `.github/workflows/web-pages.yml` compila o app a cada push e **publica quando o código chega na branch `main`**.
