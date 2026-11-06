@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AppContexto, type Folha } from './contexto'
-import { useEstado, pedirArmazenamentoPersistente } from './store'
+import { useEstado, pedirArmazenamentoPersistente, registrarPrimeiroUso } from './store'
 import { BarraAbas, type Aba } from './componentes/Base'
 import { Hoje } from './telas/Hoje'
 import { Tarefas } from './telas/Tarefas'
@@ -15,7 +15,10 @@ export function App() {
   const [aba, setAba] = useState<Aba>('hoje')
   const [folha, setFolha] = useState<Folha | null>(null)
 
-  useEffect(() => pedirArmazenamentoPersistente(), [])
+  useEffect(() => {
+    pedirArmazenamentoPersistente()
+    registrarPrimeiroUso()
+  }, [])
 
   const fechar = () => setFolha(null)
 

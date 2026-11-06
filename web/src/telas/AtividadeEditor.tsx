@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Folha, Icone, Segmento, ChipContexto } from '../componentes/Base'
-import { useEstado, salvarAtividade, apagarAtividade, alternarConclusao, alternarCancelamento } from '../store'
+import { useEstado, salvarAtividade, apagarAtividade, alternarConclusao, alternarCancelamento, apagarIdeia } from '../store'
 import {
   type Atividade, type Contexto, type Etapa, type ItemChecklist, type Prioridade, type Repeticao, type Tipo,
   CONTEXTOS, OPCOES_LEMBRETE, PRIORIDADES, REPETICOES, comHora, ehHoje, fimEfetivo, inicioDoDia, nomeLembrete, novoId, somarDias,
@@ -12,7 +12,7 @@ import { CartaoCliente } from '../componentes/Cliente'
 interface Props {
   fechar: () => void
   atividade?: Atividade
-  pedido?: { atividadeTipo?: Tipo; data?: Date; temHorario?: boolean; clienteId?: string; etapa?: Etapa }
+  pedido?: { atividadeTipo?: Tipo; data?: Date; temHorario?: boolean; clienteId?: string; etapa?: Etapa; titulo?: string; descricao?: string; ideiaId?: string }
 }
 
 function proximaHoraCheia(dia: Date): Date {
@@ -61,7 +61,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
     const h = pedido?.temHorario && pedido.data ? pedido.data : proximaHoraCheia(dia)
     return {
       tipo,
-      titulo: '',
+      titulo: pedido?.titulo ?? '',
       temData: true,
       dia,
       temHorario: comHorario,
@@ -69,13 +69,13 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       horaFim: new Date(h.getTime() + 3600000),
       contexto: (pedido?.clienteId ? 'Clientes' : 'China Link') as Contexto,
       clienteId: pedido?.clienteId ?? null,
-      descricao: '',
+      descricao: pedido?.descricao ?? '',
       prioridade: 1 as Prioridade,
       repeticao: 'nunca' as Repeticao,
       lembretes: tipo === 'compromisso' ? [15] : [],
       local: tipo === 'compromisso' ? enderecoDe(pedido?.clienteId) : '',
       link: '',
-      maisOpcoes: false,
+      maisOpcoes: !!pedido?.descricao,
       etapa: (pedido?.etapa ?? 'aFazer') as Etapa,
       checklist: [] as ItemChecklist[],
     }
@@ -169,15 +169,16 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
       criadaEm: atividade?.criadaEm ?? new Date().toISOString(),
       concluidaEm: atividade?.concluidaEm ?? null,
       etapa: inicial.etapa,
-      checklist: ehCompromisso ? checklist.filter((i) => i.texto.trim()) : (atividade?.checklist ?? []),
+      checklist: checklist.filter((i) => i.texto.trim()),
     }
   }
 
   function salvar() {
     if (!podeSalvar) return
     const a = montar()
-    if (ehCompromisso && novoItem.trim()) a.checklist = [...a.checklist, { id: novoId(), texto: novoItem.trim(), feito: false }]
+    if (novoItem.trim()) a.checklist = [...a.checklist, { id: novoId(), texto: novoItem.trim(), feito: false }]
     salvarAtividade(a)
+    if (pedido?.ideiaId) apagarIdeia(pedido.ideiaId)
     fechar()
   }
 
@@ -309,7 +310,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
         {cliente && <div style={{ marginTop: 10 }}><CartaoCliente cliente={cliente} /></div>}
       </div>
 
-      {ehCompromisso && (
+      {(
         <div>
           {rotulo('Checklist', true)}
           <div className="card checklist-editor">
@@ -343,7 +344,7 @@ export function AtividadeEditor({ fechar, atividade, pedido }: Props) {
               }}
             >
               <span className="texto2" style={{ width: 22, display: 'grid', placeItems: 'center' }}><Icone nome="mais" tamanho={16} /></span>
-              <input value={novoItem} onChange={(e) => setNovoItem(e.target.value)} placeholder="Adicionar item (ex.: levar referências)" enterKeyHint="done" />
+              <input value={novoItem} onChange={(e) => setNovoItem(e.target.value)} placeholder={ehCompromisso ? 'Adicionar item (ex.: levar referências)' : 'Adicionar item (ex.: roteiro, arte, legenda)'} enterKeyHint="done" />
             </form>
           </div>
         </div>

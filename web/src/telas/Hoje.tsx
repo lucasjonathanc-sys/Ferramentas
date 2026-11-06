@@ -1,16 +1,22 @@
+import { useState } from 'react'
 import { useApp } from '../contexto'
-import { useEstado } from '../store'
-import { Cabecalho, EstadoVazio, ListaAtividades, TituloSecao } from '../componentes/Base'
+import { useEstado, alternarPagamento, adiarLembreteBackup, diasSemBackup, jaFezBackup } from '../store'
+import { mesAtual, pagamentosProximos, textoPagamento } from '../cliente'
+import { AvatarCliente } from '../componentes/Cliente'
+import { Cabecalho, EstadoVazio, Icone, ListaAtividades, TituloSecao } from '../componentes/Base'
 import {
   type Atividade, aberta, aparece, atrasada, dataDe, ehCompromisso, ehHoje, inicioDoDia, inicioEm,
   ordenacao, proximaOcorrencia, somarDias,
 } from '../modelo'
-import { dataPorExtenso } from '../datas'
+import { dataPorExtenso, dinheiro } from '../datas'
 import { AvisoInstalar } from './AvisoInstalar'
 
 export function Hoje() {
   const app = useApp()
-  const { atividades, nome } = useEstado()
+  const { atividades, clientes, nome } = useEstado()
+  const [backupAdiado, setBackupAdiado] = useState(false)
+  const semBackup = backupAdiado ? null : diasSemBackup()
+  const pagamentos = pagamentosProximos(clientes)
   const agora = new Date()
 
   const h = agora.getHours()
@@ -52,6 +58,49 @@ export function Hoje() {
       <div className="pilha">
         <Cabecalho titulo={saudacao} subtitulo={dataPorExtenso(agora)} pincel />
         <AvisoInstalar />
+
+        {semBackup !== null && (
+          <div className="aviso-instalar" style={{ alignItems: 'center' }}>
+            <span style={{ color: 'var(--vinho)' }}><Icone nome="pasta" tamanho={20} /></span>
+            <div style={{ flex: 1 }}>
+              <b>{jaFezBackup() ? `Faz ${semBackup} dias sem backup.` : 'Que tal salvar um backup?'}</b>{' '}
+              Seus dados ficam só neste iPhone; uma cópia no iCloud Drive evita perder tudo.
+              <div className="linha" style={{ marginTop: 10, gap: 8 }}>
+                <button className="pilula" style={{ padding: '8px 14px' }} onClick={() => app.abrir({ tipo: 'ajustes' })}>Salvar backup</button>
+                <button className="pilula contorno" style={{ padding: '8px 14px' }} onClick={() => { adiarLembreteBackup(3); setBackupAdiado(true) }}>Agora não</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pagamentos.length > 0 && (
+          <div className="pilha-p">
+            <TituloSecao titulo="Pagamentos" detalhe={String(pagamentos.length)} />
+            <div className="card p12">
+              {pagamentos.map((p, i) => (
+                <div key={p.cliente.id}>
+                  <div className="item" style={{ alignItems: 'center', cursor: 'default' }}>
+                    <AvatarCliente cliente={p.cliente} tamanho={34} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="item-titulo">{p.cliente.nome}</div>
+                      <div className="item-meta">
+                        <span style={{ color: p.tipo === 'atrasado' ? 'var(--alerta)' : p.tipo === 'hoje' ? 'var(--vinho)' : undefined }}>
+                          {textoPagamento(p)}
+                        </span>
+                        <span>·</span>
+                        <span>{dinheiro(p.cliente.valorMensal)}</span>
+                      </div>
+                    </div>
+                    <button className="pilula contorno" style={{ padding: '7px 12px', fontSize: 13 }} onClick={() => alternarPagamento(p.cliente.id, mesAtual())}>
+                      <Icone nome="check" tamanho={14} /> Pago
+                    </button>
+                  </div>
+                  {i < pagamentos.length - 1 && <div className="sep" style={{ marginLeft: 46 }} />}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {atividades.length === 0 ? (
           <EstadoVazio

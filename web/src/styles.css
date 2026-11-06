@@ -396,3 +396,19 @@ input::placeholder, textarea::placeholder { color: var(--texto2); }
   background: var(--card); border: 0.5px solid var(--borda); border-radius: 16px; font-size: 16px; font-weight: 500;
 }
 .recolhivel.aberta { border-color: var(--texto2); }
+
+/* MARK: Filtro de cliente na Agenda e banco de ideias */
+
+.seletor-cliente, .seletor-mini {
+  position: relative; display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex: 1;
+  padding: 9px 12px; border-radius: 999px; border: 1px solid var(--borda); background: var(--campo); font-size: 14px;
+}
+.seletor-cliente select, .seletor-mini select { position: absolute; inset: 0; opacity: 0; width: 100%; }
+.seletor-cliente-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.seletor-mini { flex: 0 1 auto; padding: 7px 12px; font-size: 13px; }
+
+.ideia-nova { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; }
+.ideia-nova textarea { border: 0; outline: 0; background: transparent; resize: none; font-size: 16px; line-height: 1.35; width: 100%; }
+.ideia { cursor: pointer; padding: 14px; }
+.ideia-texto { font-size: 16px; line-height: 1.35; white-space: pre-wrap; }
+.ideia-notas { margin-top: 6px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

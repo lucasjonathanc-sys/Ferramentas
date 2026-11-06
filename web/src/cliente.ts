@@ -56,3 +56,34 @@ export function formatarTelefone(t: string): string {
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
   return t
 }
+
+export interface PagamentoProximo {
+  cliente: Cliente
+  tipo: 'atrasado' | 'hoje' | 'breve'
+  /** Dia do vencimento neste mês */
+  dia: number
+  /** Dias até o vencimento (negativo = atrasado) */
+  dias: number
+}
+
+/** Pagamentos do mês ainda não marcados: atrasados, de hoje e dos próximos dias. */
+export function pagamentosProximos(clientes: Cliente[], hoje = new Date(), janela = 3): PagamentoProximo[] {
+  const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate()
+  const mes = mesAtual(hoje)
+  return clientes
+    .filter((c) => c.ativo && c.valorMensal > 0 && c.diaPagamento && !c.pagamentos.includes(mes))
+    .map((c) => {
+      const dia = Math.min(c.diaPagamento!, ultimoDia)
+      const dias = dia - hoje.getDate()
+      const tipo: PagamentoProximo['tipo'] = dias < 0 ? 'atrasado' : dias === 0 ? 'hoje' : 'breve'
+      return { cliente: c, tipo, dia, dias }
+    })
+    .filter((p) => p.dias <= janela)
+    .sort((a, b) => a.dias - b.dias)
+}
+
+export function textoPagamento(p: PagamentoProximo): string {
+  if (p.tipo === 'atrasado') return `Atrasado · venceu dia ${p.dia}`
+  if (p.tipo === 'hoje') return 'Vence hoje'
+  return p.dias === 1 ? `Vence amanhã (dia ${p.dia})` : `Vence em ${p.dias} dias (dia ${p.dia})`
+}

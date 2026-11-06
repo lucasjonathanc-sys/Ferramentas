@@ -3,7 +3,7 @@ import type { Etapa } from './modelo'
 
 /** Folhas (sheets) que podem ser abertas de qualquer tela. */
 export type Folha =
-  | { tipo: 'nova'; atividadeTipo?: 'tarefa' | 'compromisso'; data?: Date; temHorario?: boolean; clienteId?: string; etapa?: Etapa }
+  | { tipo: 'nova'; atividadeTipo?: 'tarefa' | 'compromisso'; data?: Date; temHorario?: boolean; clienteId?: string; etapa?: Etapa; titulo?: string; descricao?: string; /** ideia que vira tarefa (sai do banco ao salvar) */ ideiaId?: string }
   | { tipo: 'detalhes'; id: string; /** ocorrência tocada (ISO), para repetições */ dia?: string }
   | { tipo: 'editar'; id: string; /** folha para voltar ao fechar */ voltar?: Folha }
   | { tipo: 'ajustes' }

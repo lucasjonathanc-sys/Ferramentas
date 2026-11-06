@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Folha, Logo } from '../componentes/Base'
 import { useApp } from '../contexto'
-import { useEstado, definirNome, exportarBackup, importarBackup, itensAntigos, limparAntigos } from '../store'
+import { useEstado, definirNome, exportarBackup, importarBackup, itensAntigos, limparAntigos, registrarBackup } from '../store'
 import {
   type Atividade, aberta, corContexto, ehCompromisso, momentoLembrete, nomeLembrete, inicioEm, proximaOcorrencia,
 } from '../modelo'
@@ -22,6 +22,7 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
     if (nav.canShare?.({ files: [arquivo] })) {
       try {
         await navigator.share({ files: [arquivo], title: 'Backup DB. Organiza' })
+        registrarBackup()
         setMensagem('Backup pronto.')
         return
       } catch {
@@ -35,6 +36,7 @@ export function Ajustes({ fechar }: { fechar: () => void }) {
     a.download = nome
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 10000)
+    registrarBackup()
     setMensagem('Backup salvo.')
   }
 

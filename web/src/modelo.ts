@@ -317,3 +317,23 @@ export function ordenacao(a: Atividade, b: Atividade): number {
   if (a.prioridade !== b.prioridade) return b.prioridade - a.prioridade
   return b.criadaEm.localeCompare(a.criadaEm)
 }
+
+// MARK: - Banco de ideias
+
+export interface Ideia {
+  id: string
+  texto: string
+  notas: string
+  clienteId: string | null
+  criadaEm: string
+}
+
+export function normalizarIdeia(i: Partial<Ideia>): Ideia {
+  return {
+    id: i.id || novoId(),
+    texto: typeof i.texto === 'string' ? i.texto : '',
+    notas: typeof i.notas === 'string' ? i.notas : '',
+    clienteId: typeof i.clienteId === 'string' ? i.clienteId : null,
+    criadaEm: typeof i.criadaEm === 'string' ? i.criadaEm : new Date().toISOString(),
+  }
+}

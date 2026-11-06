@@ -224,6 +224,11 @@ function ConteudoCartao({ atividade: a, cliente }: { atividade: Atividade; clien
         )}
         {a.prioridade === 2 && !feito && <span style={{ color: 'var(--alerta)' }}><Icone nome="bandeira" tamanho={12} peso={2} /></span>}
         {a.repeticao !== 'nunca' && <Icone nome="repetir" tamanho={12} />}
+        {a.checklist.length > 0 && (
+          <span className={`cartao-data ${a.checklist.every((i) => i.feito) ? 'feita' : ''}`}>
+            <Icone nome="checklist" tamanho={11} /> {a.checklist.filter((i) => i.feito).length}/{a.checklist.length}
+          </span>
+        )}
       </div>
     </>
   )

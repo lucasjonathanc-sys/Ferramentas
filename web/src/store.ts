@@ -1,7 +1,7 @@
 // Estado do app, salvo no próprio iPhone (localStorage).
 import { useSyncExternalStore } from 'react'
 import {
-  type Atividade, type Cliente, type ColunaQuadro, aberta, dataDe, ehCompromisso, normalizarAtividade, normalizarCliente, novoId, proximaData,
+  type Atividade, type Cliente, type ColunaQuadro, type Ideia, aberta, dataDe, ehCompromisso, normalizarAtividade, normalizarCliente, normalizarIdeia, novoId, proximaData,
 } from './modelo'
 
 const CHAVE = 'hb-organiza-v1'
@@ -9,10 +9,11 @@ const CHAVE = 'hb-organiza-v1'
 export interface Estado {
   atividades: Atividade[]
   clientes: Cliente[]
+  ideias: Ideia[]
   nome: string
 }
 
-const vazio: Estado = { atividades: [], clientes: [], nome: 'Hanna' }
+const vazio: Estado = { atividades: [], clientes: [], ideias: [], nome: 'Hanna' }
 
 function carregar(): Estado {
   try {
@@ -22,6 +23,7 @@ function carregar(): Estado {
     return {
       atividades: Array.isArray(dados.atividades) ? dados.atividades.map(normalizarAtividade) : [],
       clientes: Array.isArray(dados.clientes) ? dados.clientes.map(normalizarCliente) : [],
+      ideias: Array.isArray(dados.ideias) ? dados.ideias.map(normalizarIdeia) : [],
       nome: typeof dados.nome === 'string' ? dados.nome : 'Hanna',
     }
   } catch {
@@ -92,6 +94,7 @@ export function alternarConclusao(id: string) {
       id: novoId(),
       status: 'aberta',
       etapa: 'aFazer',
+      checklist: a.checklist.map((i) => ({ ...i, id: novoId(), feito: false })),
       data: proxima.toISOString(),
       criadaEm: new Date().toISOString(),
       concluidaEm: null,
@@ -146,6 +149,7 @@ export function apagarCliente(id: string) {
     ...estado,
     clientes: estado.clientes.filter((c) => c.id !== id),
     atividades: estado.atividades.map((a) => (a.clienteId === id ? { ...a, clienteId: null } : a)),
+    ideias: estado.ideias.map((i) => (i.clienteId === id ? { ...i, clienteId: null } : i)),
   })
 }
 
@@ -167,6 +171,8 @@ export function importarBackup(texto: string): boolean {
     definir({
       atividades: dados.atividades.map(normalizarAtividade),
       clientes: dados.clientes.map(normalizarCliente),
+      // Backups antigos não têm ideias: mantém as que já existem no app
+      ideias: Array.isArray(dados.ideias) ? dados.ideias.map(normalizarIdeia) : estado.ideias,
       nome: typeof dados.nome === 'string' ? dados.nome : estado.nome,
     })
     return true
@@ -226,4 +232,57 @@ export function criarCartaoRapido(titulo: string, etapa: Exclude<ColunaQuadro, '
     etapa,
     checklist: [],
   })
+}
+
+// MARK: - Lembrete de backup
+
+const CHAVE_ULTIMO_BACKUP = 'hb-organiza-ultimo-backup'
+const CHAVE_PRIMEIRO_USO = 'hb-organiza-primeiro-uso'
+const CHAVE_ADIAR_BACKUP = 'hb-organiza-adiar-backup'
+const DIAS_SEM_BACKUP = 7
+
+const lerData = (chave: string) => {
+  try { const v = localStorage.getItem(chave); return v ? Number(v) : null } catch { return null }
+}
+const gravarData = (chave: string, quando: number) => {
+  try { localStorage.setItem(chave, String(quando)) } catch { /* ignora */ }
+}
+
+/** Marca o primeiro uso do app (para não pedir backup logo no começo). */
+export function registrarPrimeiroUso() {
+  if (lerData(CHAVE_PRIMEIRO_USO) === null) gravarData(CHAVE_PRIMEIRO_USO, Date.now())
+}
+
+export function registrarBackup() {
+  gravarData(CHAVE_ULTIMO_BACKUP, Date.now())
+  ouvintes.forEach((f) => f())
+}
+
+export function adiarLembreteBackup(dias = 3) {
+  gravarData(CHAVE_ADIAR_BACKUP, Date.now() + dias * 86400000)
+  ouvintes.forEach((f) => f())
+}
+
+/** Dias desde o último backup, se já passou do limite e há dados para proteger; senão null. */
+export function diasSemBackup(): number | null {
+  if (!estado.atividades.length && !estado.clientes.length) return null
+  const adiar = lerData(CHAVE_ADIAR_BACKUP)
+  if (adiar && Date.now() < adiar) return null
+  const base = lerData(CHAVE_ULTIMO_BACKUP) ?? lerData(CHAVE_PRIMEIRO_USO)
+  if (!base) return null
+  const dias = Math.floor((Date.now() - base) / 86400000)
+  return dias >= DIAS_SEM_BACKUP ? dias : null
+}
+
+export const jaFezBackup = () => lerData(CHAVE_ULTIMO_BACKUP) !== null
+
+// MARK: - Banco de ideias
+
+export function salvarIdeia(i: Ideia) {
+  const existe = estado.ideias.some((x) => x.id === i.id)
+  definir({ ...estado, ideias: existe ? estado.ideias.map((x) => (x.id === i.id ? i : x)) : [i, ...estado.ideias] })
+}
+
+export function apagarIdeia(id: string) {
+  definir({ ...estado, ideias: estado.ideias.filter((i) => i.id !== id) })
 }
