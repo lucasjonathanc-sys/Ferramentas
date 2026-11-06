@@ -28,7 +28,7 @@ export function gerarICS(a: Atividade, cliente?: Cliente | null): string | null 
   const linhas = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//HB Organiza//PT-BR',
+    'PRODID:-//DB. Organiza//PT-BR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

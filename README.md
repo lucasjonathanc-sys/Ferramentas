@@ -1,4 +1,4 @@
-# HB Organiza 💜
+# DB. Organiza
 
 App para organizar a rotina de quem trabalha como **copywriter na China Link** e faz **social media freela** (vídeo, design, posts) para pequenas empresas.
 
@@ -11,7 +11,7 @@ Existem duas versões, com as mesmas telas e a mesma identidade visual:
 
 1. Abra **https://lucasjonathanc-sys.github.io/Ferramentas/** no **Safari** do iPhone.
 2. Toque em **Compartilhar** (o quadrado com a seta) e depois em **"Adicionar à Tela de Início"**.
-3. Pronto: o **HB Organiza** aparece com o ícone **DB.** e abre em tela cheia, como um app.
+3. Pronto: o **DB. Organiza** aparece com o ícone **DB.** e abre em tela cheia, como um app.
 
 - Os dados ficam salvos **só no iPhone**. Em **Ajustes → Salvar backup** dá para guardar uma cópia no app Arquivos ou no iCloud Drive.
 - Para receber os **lembretes com o app fechado**, abra a atividade e toque em **"Adicionar ao Calendário do iPhone"**. Os alarmes vão junto e quem avisa é o Calendário.
