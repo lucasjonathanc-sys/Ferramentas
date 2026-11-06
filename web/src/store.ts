@@ -34,7 +34,11 @@ function carregar(): Estado {
 let estado: Estado = carregar()
 const ouvintes = new Set<() => void>()
 
-function definir(novo: Estado) {
+/** Chamado a cada mudança feita no app (a sincronização com a nuvem usa para enviar). */
+type AoMudar = (antes: Estado, depois: Estado) => void
+let aoMudar: AoMudar | null = null
+
+function gravar(novo: Estado) {
   estado = novo
   try {
     localStorage.setItem(CHAVE, JSON.stringify(estado))
@@ -42,6 +46,29 @@ function definir(novo: Estado) {
     // armazenamento cheio ou bloqueado: mantém em memória
   }
   ouvintes.forEach((f) => f())
+}
+
+function definir(novo: Estado) {
+  const antes = estado
+  gravar(novo)
+  aoMudar?.(antes, novo)
+}
+
+/** Liga (ou desliga, com null) o envio das mudanças para a nuvem. */
+export function registrarSincronizacao(fn: AoMudar | null) {
+  aoMudar = fn
+}
+
+/** Aplica dados que vieram da nuvem, sem reenviar para ela. */
+export function aplicarDaNuvem(parcial: Partial<Estado>) {
+  gravar({ ...estado, ...parcial })
+}
+
+export const estadoAtual = () => estado
+
+/** Esvazia os dados deste aparelho (ao sair da conta da nuvem). */
+export function limparDadosLocais() {
+  gravar({ ...vazio })
 }
 
 export function useEstado(): Estado {

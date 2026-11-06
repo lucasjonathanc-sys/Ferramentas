@@ -10,11 +10,16 @@ import {
 } from '../modelo'
 import { dataPorExtenso, dinheiro } from '../datas'
 import { AvisoInstalar } from './AvisoInstalar'
+import { useSituacaoNuvem } from './Sincronizacao'
 
 export function Hoje() {
   const app = useApp()
   const { atividades, clientes, nome } = useEstado()
   const [backupAdiado, setBackupAdiado] = useState(false)
+  const nuvem = useSituacaoNuvem()
+  const [conviteFechado, setConviteFechado] = useState(() => {
+    try { return localStorage.getItem('hb-organiza-convite-nuvem') === '1' } catch { return false }
+  })
   const semBackup = backupAdiado ? null : diasSemBackup()
   const pagamentos = pagamentosProximos(clientes)
   const agora = new Date()
@@ -59,7 +64,26 @@ export function Hoje() {
         <Cabecalho titulo={saudacao} subtitulo={dataPorExtenso(agora)} pincel />
         <AvisoInstalar />
 
-        {semBackup !== null && (
+        {nuvem.tipo === 'fora' && !conviteFechado && (
+          <div className="aviso-instalar" style={{ alignItems: 'center' }}>
+            <span style={{ color: 'var(--vinho)' }}><Icone nome="nuvem" tamanho={22} /></span>
+            <div style={{ flex: 1 }}>
+              <b>Sincronize seus dois iPhones.</b> Entre com sua conta e o que mudar em um aparece no outro na hora.
+              <div className="linha" style={{ marginTop: 10, gap: 8 }}>
+                <button className="pilula" style={{ padding: '8px 14px' }} onClick={() => app.abrir({ tipo: 'ajustes' })}>Entrar</button>
+                <button
+                  className="pilula contorno"
+                  style={{ padding: '8px 14px' }}
+                  onClick={() => { try { localStorage.setItem('hb-organiza-convite-nuvem', '1') } catch { /* ignora */ } setConviteFechado(true) }}
+                >
+                  Agora não
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {nuvem.tipo !== 'conectada' && semBackup !== null && (
           <div className="aviso-instalar" style={{ alignItems: 'center' }}>
             <span style={{ color: 'var(--vinho)' }}><Icone nome="pasta" tamanho={20} /></span>
             <div style={{ flex: 1 }}>
