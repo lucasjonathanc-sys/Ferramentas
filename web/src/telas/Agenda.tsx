@@ -14,7 +14,12 @@ const DIAS_SEMANA = 3
 const ALTURA_HORA = 56
 
 export function Agenda() {
-  const { atividades } = useEstado()
+  const { atividades: todas, clientes } = useEstado()
+  const [clienteFiltro, setClienteFiltro] = useState('')
+  const ativos = clientes.filter((c) => c.ativo || c.id === clienteFiltro).sort((a, b) => a.nome.localeCompare(b.nome))
+  const clienteSelecionado = clientes.find((c) => c.id === clienteFiltro)
+  // Calendário de conteúdo por cliente: mostra só as atividades do cliente escolhido
+  const atividades = clienteFiltro ? todas.filter((a) => a.clienteId === clienteFiltro) : todas
   const [modo, setModo] = useState<Modo>('semana')
   const [referencia, setReferencia] = useState(() => inicioDoDia(new Date()))
 
@@ -37,7 +42,24 @@ export function Agenda() {
   return (
     <div className="app" style={{ height: '100%' }}>
       <div className="px pilha" style={{ gap: 14, paddingTop: 'calc(var(--seguro-topo) + 14px)', paddingBottom: 12 }}>
-        <Cabecalho titulo="Agenda" />
+        <Cabecalho
+          titulo="Agenda"
+          extra={ativos.length > 0 ? (
+            <label
+              className="seletor-cliente"
+              style={clienteSelecionado ? { borderColor: clienteSelecionado.cor, color: clienteSelecionado.cor } : undefined}
+              aria-label="Filtrar por cliente"
+            >
+              <select value={clienteFiltro} onChange={(e) => setClienteFiltro(e.target.value)}>
+                <option value="">Todos os clientes</option>
+                {ativos.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+              {clienteSelecionado && <span className="bolinha" style={{ background: clienteSelecionado.cor, width: 8, height: 8 }} />}
+              <span className="seletor-cliente-texto">{clienteSelecionado?.nome ?? 'Todos os clientes'}</span>
+              <Icone nome="setas" tamanho={12} />
+            </label>
+          ) : undefined}
+        />
         <Segmento
           opcoes={[{ valor: 'dia' as Modo, titulo: 'Dia' }, { valor: 'semana' as Modo, titulo: 'Semana' }, { valor: 'mes' as Modo, titulo: 'Mês' }]}
           valor={modo}

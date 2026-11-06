@@ -17,6 +17,8 @@ Existem duas versões, com as mesmas telas e a mesma identidade visual:
 - Para receber os **lembretes com o app fechado**, abra a atividade e toque em **"Adicionar ao Calendário do iPhone"**. Os alarmes vão junto e quem avisa é o Calendário.
 - **Tarefas em Lista ou Quadro (estilo Trello):** colunas A fazer → Fazendo → Em aprovação → Feito. Para mover um cartão, segure e arraste, ou use o botão ⇄ "Mover para…".
 - **Checklist em tarefas e compromissos:** itens para marcar direto nos detalhes (ex.: roteiro, arte, legenda).
+- **Banco de ideias** (Tarefas → Ideias): guarda ganchos, pautas e copies, gerais ou por cliente; "Virar tarefa" abre a tarefa já preenchida e tira a ideia do banco.
+- **Calendário por cliente:** o filtro no topo da Agenda mostra só as atividades de um cliente em Dia, Semana e Mês.
 - **Tela Hoje:** mostra os pagamentos de clientes atrasados, de hoje e dos próximos 3 dias (com botão "Pago") e lembra de salvar backup se passar 7 dias sem.
 - **Clientes (CRM):** cada cliente tem um perfil com contato, contrato/pagamento e identidade da marca. Ao escolher o cliente numa tarefa ou compromisso, aparece o resumo do perfil com atalhos (WhatsApp, Instagram, Drive...), e nos compromissos o endereço já entra no Local.
 - Funciona sem internet depois da primeira abertura.

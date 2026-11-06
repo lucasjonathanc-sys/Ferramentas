@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useEstado } from '../store'
 import { Cabecalho, Chip, EstadoVazio, ListaAtividades, Segmento } from '../componentes/Base'
 import { Quadro } from './Quadro'
+import { Ideias } from './Ideias'
 import {
   type Atividade, aberta, atrasada, dataDe, ehCompromisso, inicioDoDia, inicioEm, jaPassou,
   proximaOcorrencia, somarDias,
@@ -9,11 +10,14 @@ import {
 
 type FiltroStatus = 'abertas' | 'concluidas' | 'canceladas'
 type FiltroTipo = 'todas' | 'tarefas' | 'compromissos'
-type Visao = 'lista' | 'quadro'
+type Visao = 'lista' | 'quadro' | 'ideias'
 const CHAVE_VISAO = 'hb-organiza-visao-tarefas'
 
 function visaoSalva(): Visao {
-  try { return localStorage.getItem(CHAVE_VISAO) === 'quadro' ? 'quadro' : 'lista' } catch { return 'lista' }
+  try {
+    const v = localStorage.getItem(CHAVE_VISAO)
+    return v === 'quadro' || v === 'ideias' ? v : 'lista'
+  } catch { return 'lista' }
 }
 
 export function Tarefas() {
@@ -57,12 +61,12 @@ export function Tarefas() {
         <div className="px pilha" style={{ gap: 14 }}>
           <Cabecalho titulo="Tarefas" busca={{ valor: busca, definir: setBusca, placeholder: 'Buscar por título' }} />
           <Segmento
-            opcoes={[{ valor: 'lista' as Visao, titulo: 'Lista' }, { valor: 'quadro' as Visao, titulo: 'Quadro' }]}
+            opcoes={[{ valor: 'lista' as Visao, titulo: 'Lista' }, { valor: 'quadro' as Visao, titulo: 'Quadro' }, { valor: 'ideias' as Visao, titulo: 'Ideias' }]}
             valor={visao}
             definir={setVisao}
           />
         </div>
-        {visao === 'quadro' ? <Quadro busca={busca} /> : <>
+        {visao === 'quadro' ? <Quadro busca={busca} /> : visao === 'ideias' ? <Ideias busca={busca} /> : <>
         <div className="chips">
           <Chip titulo="Abertas" ativo={status === 'abertas'} onClick={() => setStatus('abertas')} />
           <Chip titulo="Concluídas" ativo={status === 'concluidas'} onClick={() => setStatus('concluidas')} />

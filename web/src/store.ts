@@ -1,7 +1,7 @@
 // Estado do app, salvo no próprio iPhone (localStorage).
 import { useSyncExternalStore } from 'react'
 import {
-  type Atividade, type Cliente, type ColunaQuadro, aberta, dataDe, ehCompromisso, normalizarAtividade, normalizarCliente, novoId, proximaData,
+  type Atividade, type Cliente, type ColunaQuadro, type Ideia, aberta, dataDe, ehCompromisso, normalizarAtividade, normalizarCliente, normalizarIdeia, novoId, proximaData,
 } from './modelo'
 
 const CHAVE = 'hb-organiza-v1'
@@ -9,10 +9,11 @@ const CHAVE = 'hb-organiza-v1'
 export interface Estado {
   atividades: Atividade[]
   clientes: Cliente[]
+  ideias: Ideia[]
   nome: string
 }
 
-const vazio: Estado = { atividades: [], clientes: [], nome: 'Hanna' }
+const vazio: Estado = { atividades: [], clientes: [], ideias: [], nome: 'Hanna' }
 
 function carregar(): Estado {
   try {
@@ -22,6 +23,7 @@ function carregar(): Estado {
     return {
       atividades: Array.isArray(dados.atividades) ? dados.atividades.map(normalizarAtividade) : [],
       clientes: Array.isArray(dados.clientes) ? dados.clientes.map(normalizarCliente) : [],
+      ideias: Array.isArray(dados.ideias) ? dados.ideias.map(normalizarIdeia) : [],
       nome: typeof dados.nome === 'string' ? dados.nome : 'Hanna',
     }
   } catch {
@@ -147,6 +149,7 @@ export function apagarCliente(id: string) {
     ...estado,
     clientes: estado.clientes.filter((c) => c.id !== id),
     atividades: estado.atividades.map((a) => (a.clienteId === id ? { ...a, clienteId: null } : a)),
+    ideias: estado.ideias.map((i) => (i.clienteId === id ? { ...i, clienteId: null } : i)),
   })
 }
 
@@ -168,6 +171,8 @@ export function importarBackup(texto: string): boolean {
     definir({
       atividades: dados.atividades.map(normalizarAtividade),
       clientes: dados.clientes.map(normalizarCliente),
+      // Backups antigos não têm ideias: mantém as que já existem no app
+      ideias: Array.isArray(dados.ideias) ? dados.ideias.map(normalizarIdeia) : estado.ideias,
       nome: typeof dados.nome === 'string' ? dados.nome : estado.nome,
     })
     return true
@@ -270,3 +275,14 @@ export function diasSemBackup(): number | null {
 }
 
 export const jaFezBackup = () => lerData(CHAVE_ULTIMO_BACKUP) !== null
+
+// MARK: - Banco de ideias
+
+export function salvarIdeia(i: Ideia) {
+  const existe = estado.ideias.some((x) => x.id === i.id)
+  definir({ ...estado, ideias: existe ? estado.ideias.map((x) => (x.id === i.id ? i : x)) : [i, ...estado.ideias] })
+}
+
+export function apagarIdeia(id: string) {
+  definir({ ...estado, ideias: estado.ideias.filter((i) => i.id !== id) })
+}

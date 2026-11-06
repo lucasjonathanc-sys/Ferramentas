@@ -114,7 +114,8 @@ export function Cabecalho(props: {
             )}
           </label>
         ) : (
-          <span className="espaco" />
+          // Sem busca: o "extra" (ex.: filtro de cliente) ocupa o espaço livre
+          !props.extra && <span className="espaco" />
         )}
         {props.extra}
         <button className="circulo" onClick={() => app.abrir({ tipo: 'lembretes' })} aria-label="Próximos lembretes">
